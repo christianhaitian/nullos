@@ -9,5 +9,5 @@ You will need qemu and docker to work with it, but should be able to use our stu
 
 We keep our build-artifacts in [releases](https://github.com/notnullgames/nullos2/releases).
 
-- SDL - compiled to use the accelerated framebuffer drivers
-- love for pi
+- SDL - compiled to deb for use with the accelerated framebuffer drivers
+- love - compiled to deb for pi
