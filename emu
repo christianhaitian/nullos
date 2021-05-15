@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# this will run a standard raspbioan, so you can investigate how it is setup
+
+WORK_DIR=$(realpath emu-files)
+
+mkdir -p "${WORK_DIR}"
+
+function green {
+  printf "\033[0;32m$@\033[0m\n"
+}
+
+function yellow {
+  printf "\033[0;33m$@\033[0m\n"
+}
+
+if [ ! -d "${WORK_DIR}/qemu-rpi-kernel" ];then
+  green "Collecting the qemu kernel settings"
+  git clone --depth=1 https://github.com/dhruvvyas90/qemu-rpi-kernel.git "${WORK_DIR}/qemu-rpi-kernel"
+else
+  yellow "Skipping qemu kernel settings (downloaded)"
+fi
+
+if [ ! -f "${WORK_DIR}/raspbian-lite.img" ];then
+  green "Downloading raspbian image"
+  wget https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-03-25/2021-03-04-raspios-buster-armhf-lite.zip -O "${WORK_DIR}/raspbian-lite.zip"
+  cd "${WORK_DIR}"
+  unzip raspbian-lite.zip
+  mv *armhf-lite.img raspbian-lite.img
+else
+  yellow "Skipping raspbian image (downloaded)"
+fi
+
+green "Running qemu"
+
+qemu-system-arm \
+  -M versatilepb \
+  -cpu arm1176 \
+  -m 256 \
+  -drive "file=${WORK_DIR}/raspbian-lite.img,if=none,index=0,media=disk,format=raw,id=disk0" \
+  -device "virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off" \
+  -net "user,hostfwd=tcp::5022-:22" \
+  -dtb "${WORK_DIR}/qemu-rpi-kernel/versatile-pb-buster-5.4.51.dtb" \
+  -kernel "${WORK_DIR}/qemu-rpi-kernel/kernel-qemu-5.4.51-buster" \
+  -append 'root=/dev/vda2 panic=1' \
+  -no-reboot
