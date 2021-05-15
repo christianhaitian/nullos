@@ -1,7 +1,7 @@
 FROM --platform=armhf debian:buster AS pisdlbuild
 
 # build with: docker build -t pisdlbuild docker/
-# run with:   docker run --platform armhf -v ${PWD}/work:/work --rm pisdlbuild > work/buildlog.txt
+# run with:   docker run --platform armhf -v ${PWD}/work:/work --rm pisdlbuild
 
 # this adds pi deb keys keys to system, (to allow install)
 RUN apt-get update && apt-get install -y gnupg2 && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E && apt-get remove -y gnupg2
@@ -34,4 +34,4 @@ VOLUME /work
 WORKDIR /usr/src/sdl/SDL2-2.0.14
 
 # this does the actual build on run and copies files to /work (which should be volume-mounted)
-CMD cd /usr/src/sdl/SDL2-2.0.14/ && dpkg-buildpackage -us -uc -j12 && cp /usr/src/sdl/*.deb /work
+CMD cd /usr/src/sdl/SDL2-2.0.14/ && dpkg-buildpackage -us -uc -j12 | tee /work/buildlog.txt && cp /usr/src/sdl/*.deb /work
