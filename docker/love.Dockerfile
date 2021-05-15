@@ -23,8 +23,8 @@ RUN git clone --depth=1 https://github.com/love2d/love /usr/src/love && cd /usr/
 
 # download our built debs for SDL
 RUN apt-get install -y wget && \
-  wget https://github.com/notnullgames/nullos2/releases/download/initial/libsdl2-dev_2.0.14_armhf.deb -O /tmp/libsdl2-dev_2.0.14_armhf.deb && \
-  wget https://github.com/notnullgames/nullos2/releases/download/initial/libsdl2_2.0.14_armhf.deb -O /tmp/libsdl2_2.0.14_armhf.deb && \
+  wget https://github.com/notnullgames/nullos/releases/download/initial/libsdl2-dbg_2.0.14_armhf.deb -O /tmp/libsdl2-dev_2.0.14_armhf.deb && \
+  wget https://github.com/notnullgames/nullos/releases/download/initial/libsdl2_2.0.14_armhf.deb -O /tmp/libsdl2_2.0.14_armhf.deb && \
   apt-get install -y /tmp/libsdl2*.deb && \
   rm -f /tmp/libsdl2*.deb && \
   apt-get remove -f wget
