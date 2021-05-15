@@ -14,20 +14,20 @@ COPY sysmods/raspi.list /etc/apt/sources.list.d/raspi.list
 
 # add any other deps you need, here
 RUN apt-get update && \
-  apt-get install -y git build-essential libraspberrypi-bin libraspberrypi-dev debhelper dh-autoreconf \
+  apt-get install -y libsdl2-dev git build-essential libraspberrypi-bin libraspberrypi-dev debhelper dh-autoreconf \
   pkg-config libtool g++ libfreetype6-dev luajit libluajit-5.1-dev libmodplug-dev libmpg123-dev libopenal-dev \
-  libphysfs-dev libsdl2-dev libogg-dev libvorbis-dev libtheora-dev zlib1g-dev && apt-get build-dep -y libsdl2
+  libphysfs-dev libsdl2-dev libogg-dev libvorbis-dev libtheora-dev zlib1g-dev
 
 # download upstream source from love
 RUN git clone --depth=1 https://github.com/love2d/love /usr/src/love && cd /usr/src/love && apt-get remove -y git
 
-# download our built debs for SDL
-RUN apt-get install -y wget && \
-  wget https://github.com/notnullgames/nullos/releases/download/initial/libsdl2-dbg_2.0.14_armhf.deb -O /tmp/libsdl2-dev_2.0.14_armhf.deb && \
-  wget https://github.com/notnullgames/nullos/releases/download/initial/libsdl2_2.0.14_armhf.deb -O /tmp/libsdl2_2.0.14_armhf.deb && \
-  apt-get install -y /tmp/libsdl2*.deb && \
-  rm -f /tmp/libsdl2*.deb && \
-  apt-get remove -f wget
+# # download our built debs for SDL
+# RUN apt-get install -y wget && \
+#   wget https://github.com/notnullgames/nullos/releases/download/initial/libsdl2-dbg_2.0.14_armhf.deb -O /tmp/libsdl2-dev_2.0.14_armhf.deb && \
+#   wget https://github.com/notnullgames/nullos/releases/download/initial/libsdl2_2.0.14_armhf.deb -O /tmp/libsdl2_2.0.14_armhf.deb && \
+#   apt-get install -y /tmp/libsdl2*.deb && \
+#   rm -f /tmp/libsdl2*.deb && \
+#   apt-get remove -f wget
 
 # delete package cache
 RUN apt-get clean
