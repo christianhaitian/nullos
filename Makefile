@@ -6,9 +6,18 @@ help: ## Show this help
 
 
 .PHONY: emu
-emu: ## run raspbian-lite in qemu to look at how things are setup
-	# TODO: put this all inline, here
-	./emu
+emu: emu-files/raspbian-lite.img emu-files/qemu-rpi-kernel ## run raspbian-lite (for exploring)
+	qemu-system-arm \
+	  -M versatilepb \
+	  -cpu arm1176 \
+	  -m 256 \
+	  -drive "file=emu-files/raspbian-lite.img,if=none,index=0,media=disk,format=raw,id=disk0" \
+	  -device "virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off" \
+	  -net "user,hostfwd=tcp::5022-:22" \
+	  -dtb "emu-files/qemu-rpi-kernel/versatile-pb-buster-5.4.51.dtb" \
+	  -kernel "emu-files/qemu-rpi-kernel/kernel-qemu-5.4.51-buster" \
+	  -append 'root=/dev/vda2 panic=1' \
+	  -no-reboot
 
 
 .PHONY: debs
@@ -22,7 +31,28 @@ clean: ## clean up built files
 	sudo rm -rf work
 
 
+### These support the above targets
+
+# setup docker for building debs
 .PHONY: docker-build
-docker-build: # setup docker for building debs
+docker-build:
 	docker build -f docker/sdl.Dockerfile -t pisdlbuild docker/
 	docker build -f docker/love.Dockerfile -t pilovebuild docker/
+
+# collect qemu kernel
+emu-files/qemu-rpi-kernel:
+	mkdir -p emu-files/ && \
+	git clone --depth=1 https://github.com/dhruvvyas90/qemu-rpi-kernel.git emu-files/qemu-rpi-kernel
+
+
+# collect zip of raspbian-lite image
+emu-files/raspbian-lite.zip:
+	mkdir -p emu-files/ && \
+	wget https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-03-25/2021-03-04-raspios-buster-armhf-lite.zip -O  emu-files/raspbian-lite.zip
+
+# extract raspberrypi-lite image
+emu-files/raspbian-lite.img: emu-files/raspbian-lite.zip
+	cd emu-files && \
+	unzip raspbian-lite.zip && \
+  mv *armhf-lite.img raspbian-lite.img
+
