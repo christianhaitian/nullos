@@ -28,7 +28,7 @@ debs: docker-build ## build custom debs in work/
 
 .PHONY: clean
 clean: ## clean up built files
-	sudo rm -rf work
+	sudo rm -rf work emu-files
 
 
 ### These support the above targets
