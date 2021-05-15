@@ -1,9 +1,7 @@
 FROM --platform=armhf debian:buster AS pisdlbuild
 
 # build with: docker build -t pisdlbuild docker/
-# run with:   docker run -v ${PWD}/work:/work --rm -it pisdlbuild
-
-# it will warn about platform on run, which you can remove with "--platform armhf", but it is the default because of FROM-line, so it still works fine
+# run with:   docker run --platform armhf -v ${PWD}/work:/work --rm pisdlbuild > work/buildlog.txt
 
 # this adds pi deb keys keys to system, (to allow install)
 RUN apt-get update && apt-get install -y gnupg2 && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E && apt-get remove -y gnupg2
