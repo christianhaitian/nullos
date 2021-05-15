@@ -7,6 +7,7 @@ help: ## Show this help
 
 .PHONY: emu
 emu: ## run raspbian-lite in qemu to look at how things are setup
+	# TODO: put this all inline, here
 	./emu
 
 
