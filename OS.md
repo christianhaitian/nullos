@@ -37,8 +37,6 @@ plymouth-set-default-theme tribar
 
 I made a csutom theme in [plymouth](plymouth).
 
-I had to do [this](https://raspberrypi.stackexchange.com/questions/24900/plymouth-on-raspberry-pi) to make it work (comment out pango lines.)
-
 Install it like this:
 
 ```
