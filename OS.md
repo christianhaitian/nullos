@@ -13,6 +13,41 @@ systemd-analyze critical-chain
 
 On raspbian-lite longest times I found were for really basic stuff & networking (whcih is probly die to wifi/dhcp/ssh)
 
+## bootsplash
+
+Plymouth is a moving bootsplash. I watched a video about it [here](https://youtu.be/nE-oYpEIudA).
+
+Install it:
+```
+apt install plymouth plymouth-label plymouth-themes
+```
+
+Add to cmdline.txt:
+
+```
+quiet splash plymouth.enable=1 plymouth.ignore-serial-consoles
+```
+
+This will show/set you avalable themes:
+
+```
+plymouth-set-default-theme --list
+plymouth-set-default-theme tribar
+```
+
+I made a csutom theme in [plymouth](plymouth).
+
+I had to do [this](https://raspberrypi.stackexchange.com/questions/24900/plymouth-on-raspberry-pi) to make it work (comment out pango lines.)
+
+Install it like this:
+
+```
+sudo cp -R plymouth /usr/share/plymouth/themes/notnull
+cd /usr/lib/arm-linux-gnueabihf/plymouth/
+sudo ln -s script.so notnull.so
+plymouth-set-default-theme notnull
+```
+
 ## raspi-config
 
 These options are wrappers around other config fiels and stuff. Investigate what actually gets edited (cmdline, config, etc.)
@@ -25,7 +60,7 @@ These options are wrappers around other config fiels and stuff. Investigate what
 
 ## cmdline.txt
 
-I want it to boot withoiut looking "hackery" or showing raspberries.
+I want it to boot withoiut looking "hackery" or showing raspberries. This will just show a blank screen, even without bootsplash:
 
 - `console=serial0,115200 console=tty3 root=PARTUUID=fb2b0f8d-02 rootfstype=ext4 elevator=deadline fsck.repair=yes logo.nologo quiet splash rootwait`
 
