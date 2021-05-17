@@ -11,3 +11,8 @@ We keep our build-artifacts in [releases](https://github.com/notnullgames/nullos
 
 - SDL - compiled to deb for use with the accelerated framebuffer drivers
 - love - compiled to deb for pi
+
+## TODO
+
+- Use `apt-get source` for sdl
+- scrap love build, I think it'll work fine with system-installed love (maybe needs env-var)

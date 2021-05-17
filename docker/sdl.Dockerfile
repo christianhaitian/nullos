@@ -15,6 +15,8 @@ COPY sysmods/raspi.list /etc/apt/sources.list.d/raspi.list
 # add any other deps you need, here
 RUN apt-get update && apt-get install -y build-essential libraspberrypi-bin libraspberrypi-dev && apt-get build-dep -y libsdl2
 
+# TODO: use apt-get source to grab the system's version
+
 # download upstream source from SDL
 ADD https://www.libsdl.org/release/SDL2-2.0.14.tar.gz /tmp/
 
