@@ -11,6 +11,12 @@ sudo ln -s /usr/lib/arm-linux-gnueabihf/plymouth/script.so /usr/lib/arm-linux-gn
 sudo plymouth-set-default-theme notnull
 cat /boot/cmdline.txt | sed 's/console=tty1/console=tty3/g' | sed 's/rootwait/rootwait logo.nologo quiet splash plymouth.enable=1 plymouth.ignore-serial-consoles/g' | sudo tee /boot/cmdline.txt
 
+# TODO: figure out what raspi-config installs when you enable GL driver - I think it's "dtoverlay=vc4-fkms-v3d,cma-128"
+# TODO: figure out what legacy/full/fake KMS options modify & see what works (in testing only disabled worked with regular love/sdl)
+# TODO: love without X probly needs SDL recompile: https://discourse.libsdl.org/t/problems-using-sdl2-on-raspberry-pi-without-x11-running/22621/8
+# TODO: look into "SDL_RENDER_DRIVER=opengles2" - https://github.com/libsdl-org/SDL/blob/22c221f3b0b19b8c6ccb70c866ee7eced099fdda/docs/README-raspberrypi.md
+# TODO: Mesa recompiled with vc4 support will make SDL work by default
+
 # setup host
 echo "nullbox" | sudo tee /etc/hostname
 
@@ -52,6 +58,7 @@ esac
 
 exit 0
 PAKEMON
+sudo chmod 755 /etc/init.d/pakemon
 sudo update-rc.d pakemon defaults
 
 # setup pi boot config
@@ -91,7 +98,7 @@ hdmi_mode=1
 
 # uncomment to force a HDMI mode rather than DVI. This can make audio work in
 # DMT (computer monitor) modes
-#hdmi_drive=2
+hdmi_drive=2
 
 # uncomment to increase signal to HDMI, if you have interference, blanking, or
 # no display
@@ -123,5 +130,6 @@ dtoverlay=vc4-fkms-v3d
 max_framebuffers=2
 
 [all]
-dtoverlay=vc4-fkms-v3d
+dtoverlay=vc4-fkms-v3d,cma-128
+gpu_mem=128
 CONFIG
