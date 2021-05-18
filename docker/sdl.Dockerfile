@@ -3,6 +3,8 @@ FROM --platform=armhf debian:buster AS pisdlbuild
 # build with: docker build -f docker/sdl.Dockerfile -t pisdlbuild docker/
 # run with:   docker run --platform armhf -v ${PWD}/work:/work --rm pisdlbuild
 
+# TODO: look into retropie's SDL: https://github.com/RetroPie/RetroPie-Setup/blob/master/scriptmodules/supplementary/sdl2.sh
+
 # this adds pi deb keys keys to system, (to allow install)
 RUN apt-get update && apt-get install -y gnupg2 && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E && apt-get remove -y gnupg2
 
