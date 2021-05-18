@@ -28,6 +28,9 @@ ff02::2   ip6-allrouters
 127.0.1.1 nullbox
 HOSTS
 
+# add pi to input group
+sudo usermod -aG input pi
+
 # get a copy of pakemon & run early in boot-process
 git clone --depth=1 https://github.com/notnullgames/pakemon.git /home/pi/pakemon
 sudo apt install -y love
@@ -43,6 +46,8 @@ cat << PAKEMON | sudo tee /etc/init.d/pakemon
 # Short-Description: Pakemon
 # Description:       Pakemon Graphical Frontend
 ### END INIT INFO
+
+export SDL_RENDER_DRIVER=opengles2
 
 case "$1" in
   start)
