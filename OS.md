@@ -15,36 +15,7 @@ On raspbian-lite longest times I found were for really basic stuff & networking 
 
 ## bootsplash
 
-Plymouth is a moving bootsplash. I watched a video about it [here](https://youtu.be/nE-oYpEIudA).
-
-Install it:
-```
-apt install plymouth plymouth-label plymouth-themes
-```
-
-Add to cmdline.txt:
-
-```
-quiet splash plymouth.enable=1 plymouth.ignore-serial-consoles
-```
-
-This will show/set you avalable themes:
-
-```
-plymouth-set-default-theme --list
-plymouth-set-default-theme tribar
-```
-
-I made a csutom theme in [plymouth](plymouth).
-
-Install it like this:
-
-```
-sudo cp -R plymouth /usr/share/plymouth/themes/notnull
-cd /usr/lib/arm-linux-gnueabihf/plymouth/
-sudo ln -s script.so notnull.so
-plymouth-set-default-theme notnull
-```
+Plymouth is a moving bootsplash. I watched a video about it [here](https://youtu.be/nE-oYpEIudA). I made [my own theme](https://github.com/konsumer/plymouth-theme).
 
 ## raspi-config
 
