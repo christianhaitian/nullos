@@ -20,7 +20,7 @@ sudo mount "${LOOP}p1" emu-files/root/boot
 
 cat emu-files/root/boot/cmdline.txt | sed 's/console=tty1/console=tty3/g' | sed 's/rootwait/rootwait logo.nologo quiet splash plymouth.enable=1 plymouth.ignore-serial-consoles/g' | sudo tee emu-files/root/boot/cmdline.txt
 
-
+sudo git clone --depth=1 https://github.com/notnullgames/pakemon.git /home/pi/pakemon
 sudo git clone --depth=1 https://github.com/konsumer/plymouth-theme.git emu-files/root/usr/share/plymouth/themes/notnull
 
 echo "nullbox" | sudo tee emu-files/root/etc/hostname
