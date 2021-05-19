@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+# TODO: make is supposed to skip files that it already built
+
 .PHONY: help
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -21,10 +23,21 @@ emu: work/raspbian-lite.img work/qemu-rpi-kernel ## run raspbian-lite (for explo
 
 
 .PHONY: debs
-debs: work/libsdl2.deb work/libsdl2-dev.deb ## grab debs for SDL
+debs: work/libsdl2.deb work/libsdl2-dev.deb work/love.deb ## grab debs for SDL
+
 
 .PHONY: nullos
 nullos: work/nullos.img ## generate a custom nullos disk
+
+
+.PHONY: chroot
+chroot: work/nullos.img ## Run in chroot of notnull disk
+	./scripts/chroot_image.sh work/nullos.img
+
+
+.PHONY: chroot-dev
+chroot-dev: work/raspbian-dev.img ## Run in chroot of dev disk
+	./scripts/chroot_image.sh work/raspbian-dev.img
 
 
 .PHONY: clean
@@ -39,8 +52,12 @@ work:
 
 
 # build nullos image
-work/nullos.img: work/raspbian-lite.img work/libsdl2.deb
-	./build_nullos.sh
+work/nullos.img: work/raspbian-lite.img work/libsdl2.deb work/love.deb
+	./scripts/nullos.sh
+
+# build love using dev-image
+work/love.deb: work/raspbian-dev.img
+	./scripts/love.sh
 
 # collect libsddl from retropie
 work/libsdl2.deb: work
@@ -57,9 +74,12 @@ work/qemu-rpi-kernel: work
 
 
 # collect zip of raspbian-lite image
-# TODO: this seems to not be tracking that it was downlaoded
 work/raspbian-lite.zip: work
 	wget https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-03-25/2021-03-04-raspios-buster-armhf-lite.zip -O  work/raspbian-lite.zip
+
+# make a dev-image
+work/raspbian-dev.img: work/raspbian-lite.img work/libsdl2.deb work/libsdl2-dev.deb
+	./scripts/dev.sh
 
 # extract raspberrypi-lite image
 work/raspbian-lite.img: work/raspbian-lite.zip

@@ -4,6 +4,14 @@
 
 WORK_DIR=$(realpath work)
 
+function cleanup {
+  # unmount & remove loop
+  sudo umount -f "${WORK_DIR}/root/boot"
+  sudo umount -f "${WORK_DIR}/root"
+  sudo losetup -d $LOOP
+}
+trap cleanup EXIT
+
 # setup host requirements
 sudo apt install -y binfmt-support qemu-user-static git
 mkdir -p "${WORK_DIR}/root"
@@ -137,7 +145,7 @@ dtoverlay=vc4-fkms-v3d,cma-128
 gpu_mem=128
 CONFIG
 
-cp "${WORK_DIR}/*.deb" "${WORK_DIR}/root/tmp/"
+cp "${WORK_DIR}/work/libsdl2.deb" "${WORK_DIR}/work/love.deb" "${WORK_DIR}/root/tmp/"
 
 cat << CHROOT | sudo chroot "${WORK_DIR}/root" bash
 apt update && apt upgrade -y
@@ -147,13 +155,9 @@ plymouth-set-default-theme notnull
 chmod 755 /etc/init.d/pakemon
 update-rc.d pakemon defaults
 apt install -y /tmp/*.deb
-rm /tmp/*.deb
+rm -f /tmp/*.deb
 apt-get clean
 CHROOT
 
 # TODO: build latest love, remove build-tools & libs
 
-# unmount & remove loop
-sudo umount -f "${WORK_DIR}/root/boot"
-sudo umount -f "${WORK_DIR}/root"
-sudo losetup -d $LOOP
