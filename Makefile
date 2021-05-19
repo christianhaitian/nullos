@@ -8,20 +8,23 @@ help: ## Show this help
 .PHONY: emu
 emu: emu-files/raspbian-lite.img emu-files/qemu-rpi-kernel ## run raspbian-lite (for exploring)
 	qemu-system-arm \
-	  -M versatilepb \
-	  -cpu arm1176 \
-	  -m 256 \
-	  -drive "file=emu-files/raspbian-lite.img,if=none,index=0,media=disk,format=raw,id=disk0" \
-	  -device "virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off" \
-	  -net "user,hostfwd=tcp::5022-:22" \
-	  -dtb "emu-files/qemu-rpi-kernel/versatile-pb-buster-5.4.51.dtb" \
-	  -kernel "emu-files/qemu-rpi-kernel/kernel-qemu-5.4.51-buster" \
-	  -append 'root=/dev/vda2 panic=1' \
-	  -no-reboot
+		-M versatilepb \
+		-cpu arm1176 \
+		-m 256 \
+		-drive "file=emu-files/raspbian-lite.img,if=none,index=0,media=disk,format=raw,id=disk0" \
+		-device "virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off" \
+		-net "user,hostfwd=tcp::5022-:22" \
+		-dtb "emu-files/qemu-rpi-kernel/versatile-pb-buster-5.4.51.dtb" \
+		-kernel "emu-files/qemu-rpi-kernel/kernel-qemu-5.4.51-buster" \
+		-append 'root=/dev/vda2 panic=1' \
+		-no-reboot
 
 
 .PHONY: debs
 debs: emu-files/libsdl2.deb emu-files/libsdl2-dev.deb ## grab debs for SDL
+
+.PHONY: nullos
+nullos: emu-files/nullos.img ## generate a custom nullos disk
 
 
 .PHONY: clean
@@ -34,6 +37,10 @@ clean: ## clean up built files
 emu-files:
 	mkdir -p emu-files/
 
+
+# build nullos image
+emu-files/nullos.img: emu-files/raspbian-lite.img
+	./build_nullos.sh
 
 # collect libsddl from retropie
 emu-files/libsdl2.deb: emu-files
@@ -56,5 +63,5 @@ emu-files/raspbian-lite.zip: emu-files
 # extract raspberrypi-lite image
 emu-files/raspbian-lite.img: emu-files/raspbian-lite.zip
 	unzip raspbian-lite.zip && \
-  mv *armhf-lite.img raspbian-lite.img
+	mv *armhf-lite.img raspbian-lite.img
 
