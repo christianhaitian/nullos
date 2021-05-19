@@ -14,5 +14,10 @@ We keep our build-artifacts in [releases](https://github.com/notnullgames/nullos
 
 ## TODO
 
-- Use `apt-get source` for sdl
-- scrap love build, I think it'll work fine with system-installed love (maybe needs env-var)
+- retropie SDL debs
+- build love using retropie SDL debs
+
+```
+https://files.retropie.org.uk/binaries/buster/rpi1/libsdl2-dev_2.0.10+5rpi_armhf.deb
+https://files.retropie.org.uk/binaries/buster/rpi1/libsdl2-2.0-0_2.0.10+5rpi_armhf.deb
+```
