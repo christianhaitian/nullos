@@ -2,29 +2,31 @@
 
 # this will build a nullos disk
 
+WORK_DIR=$(realpath work)
+
 # setup host requirements
 sudo apt install -y binfmt-support qemu-user-static git
-mkdir -p emu-files/root
-cp emu-files/raspbian-lite.img emu-files/nullos.img
+mkdir -p "${WORK_DIR}/root"
+cp ${WORK_DIR}/raspbian-lite.img "${WORK_DIR}/nullos.img"
 
 # resize the root partition to fill the disk
-qemu-img resize emu-files/nullos.img -f raw 10G
-LOOP=$(sudo losetup -fP --show emu-files/nullos.img)
+qemu-img resize "${WORK_DIR}/nullos.img" -f raw 10G
+LOOP=$(sudo losetup -fP --show "${WORK_DIR}/nullos.img")
 echo "- +" | sudo sfdisk -N 2 $LOOP
 sudo e2fsck -f "${LOOP}p2"
 sudo resize2fs "${LOOP}p2"
 
 # mount the partition
-sudo mount "${LOOP}p2" emu-files/root
-sudo mount "${LOOP}p1" emu-files/root/boot
+sudo mount "${LOOP}p2" "${WORK_DIR}/root"
+sudo mount "${LOOP}p1" "${WORK_DIR}/root/boot"
 
-cat emu-files/root/boot/cmdline.txt | sed 's/console=tty1/console=tty3/g' | sed 's/rootwait/rootwait logo.nologo quiet splash plymouth.enable=1 plymouth.ignore-serial-consoles/g' | sudo tee emu-files/root/boot/cmdline.txt
+cat ${WORK_DIR}/root/boot/cmdline.txt | sed 's/console=tty1/console=tty3/g' | sed 's/rootwait/rootwait logo.nologo quiet splash plymouth.enable=1 plymouth.ignore-serial-consoles/g' | sudo tee "${WORK_DIR}/root/boot/cmdline.txt"
 
 sudo git clone --depth=1 https://github.com/notnullgames/pakemon.git /home/pi/pakemon
-sudo git clone --depth=1 https://github.com/notnullgames/plymouth-theme.git emu-files/root/usr/share/plymouth/themes/notnull
+sudo git clone --depth=1 https://github.com/notnullgames/plymouth-theme.git "${WORK_DIR}/root/usr/share/plymouth/themes/notnull"
 
-echo "nullbox" | sudo tee emu-files/root/etc/hostname
-cat << HOSTS | sudo tee emu-files/root/etc/hosts
+echo "nullbox" | sudo tee "${WORK_DIR}/root/etc/hostname"
+cat << HOSTS | sudo tee "${WORK_DIR}/root/etc/hosts"
 127.0.0.1 localhost
 ::1   localhost ip6-localhost ip6-loopback
 ff02::1   ip6-allnodes
@@ -32,7 +34,7 @@ ff02::2   ip6-allrouters
 127.0.1.1 nullbox
 HOSTS
 
-cat << PAKEMON | sudo tee emu-files/root/etc/init.d/pakemon
+cat << PAKEMON | sudo tee "${WORK_DIR}/root/etc/init.d/pakemon"
 #!/usr/bin/bash
 
 ### BEGIN INIT INFO
@@ -63,7 +65,7 @@ exit 0
 PAKEMON
 
 # setup pi boot config
-cat << CONFIG | sudo tee emu-files/root/boot/config.txt
+cat << CONFIG | sudo tee "${WORK_DIR}/root/boot/config.txt"
 # For more options and information see
 # http://rpf.io/configtxt
 # Some settings may impact device functionality. See link above for details
@@ -135,9 +137,9 @@ dtoverlay=vc4-fkms-v3d,cma-128
 gpu_mem=128
 CONFIG
 
-cp emu-files/*.deb emu-files/root/tmp/
+cp "${WORK_DIR}/*.deb" "${WORK_DIR}/root/tmp/"
 
-cat << CHROOT | sudo chroot emu-files/root bash
+cat << CHROOT | sudo chroot "${WORK_DIR}/root" bash
 apt update && apt upgrade -y
 apt install -y plymouth plymouth-label plymouth-themes
 ln -s /usr/lib/arm-linux-gnueabihf/plymouth/script.so /usr/lib/arm-linux-gnueabihf/plymouth/notnull.so
@@ -152,6 +154,6 @@ CHROOT
 # TODO: build latest love, remove build-tools & libs
 
 # unmount & remove loop
-sudo umount -f emu-files/root/boot
-sudo umount -f emu-files/root
+sudo umount -f "${WORK_DIR}/root/boot"
+sudo umount -f "${WORK_DIR}/root"
 sudo losetup -d $LOOP

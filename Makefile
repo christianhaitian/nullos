@@ -57,6 +57,7 @@ work/qemu-rpi-kernel: work
 
 
 # collect zip of raspbian-lite image
+# TODO: this seems to not be tracking that it was downlaoded
 work/raspbian-lite.zip: work
 	wget https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-03-25/2021-03-04-raspios-buster-armhf-lite.zip -O  work/raspbian-lite.zip
 
