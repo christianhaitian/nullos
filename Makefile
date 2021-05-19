@@ -6,63 +6,63 @@ help: ## Show this help
 
 
 .PHONY: emu
-emu: emu-files/raspbian-lite.img emu-files/qemu-rpi-kernel ## run raspbian-lite (for exploring)
+emu: work/raspbian-lite.img work/qemu-rpi-kernel ## run raspbian-lite (for exploring)
 	qemu-system-arm \
 		-M versatilepb \
 		-cpu arm1176 \
 		-m 256 \
-		-drive "file=emu-files/raspbian-lite.img,if=none,index=0,media=disk,format=raw,id=disk0" \
+		-drive "file=work/raspbian-lite.img,if=none,index=0,media=disk,format=raw,id=disk0" \
 		-device "virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off" \
 		-net "user,hostfwd=tcp::5022-:22" \
-		-dtb "emu-files/qemu-rpi-kernel/versatile-pb-buster-5.4.51.dtb" \
-		-kernel "emu-files/qemu-rpi-kernel/kernel-qemu-5.4.51-buster" \
+		-dtb "work/qemu-rpi-kernel/versatile-pb-buster-5.4.51.dtb" \
+		-kernel "work/qemu-rpi-kernel/kernel-qemu-5.4.51-buster" \
 		-append 'root=/dev/vda2 panic=1' \
 		-no-reboot
 
 
 .PHONY: debs
-debs: emu-files/libsdl2.deb emu-files/libsdl2-dev.deb ## grab debs for SDL
+debs: work/libsdl2.deb work/libsdl2-dev.deb ## grab debs for SDL
 
 .PHONY: nullos
-nullos: emu-files/nullos.img ## generate a custom nullos disk
+nullos: work/nullos.img ## generate a custom nullos disk
 
 
 .PHONY: clean
 clean: ## clean up built files
-	sudo rm -rf work emu-files
+	sudo rm -rf work work
 
 
 ### These support the above targets
 
-emu-files:
-	mkdir -p emu-files/
+work:
+	mkdir -p work/
 
 
 # build nullos image
-emu-files/nullos.img: emu-files/raspbian-lite.img emu-files/libsdl2.deb
+work/nullos.img: work/raspbian-lite.img work/libsdl2.deb
 	./build_nullos.sh
 
 # collect libsddl from retropie
-emu-files/libsdl2.deb: emu-files
-	wget https://files.retropie.org.uk/binaries/buster/rpi1/libsdl2-2.0-0_2.0.10+5rpi_armhf.deb -O emu-files/libsdl2.deb
+work/libsdl2.deb: work
+	wget https://files.retropie.org.uk/binaries/buster/rpi1/libsdl2-2.0-0_2.0.10+5rpi_armhf.deb -O work/libsdl2.deb
 
 # collect libsdl-dev from retropie
-emu-files/libsdl2-dev.deb: emu-files
-	wget https://files.retropie.org.uk/binaries/buster/rpi1/libsdl2-dev_2.0.10+5rpi_armhf.deb -O emu-files/libsdl2-dev.deb
+work/libsdl2-dev.deb: work
+	wget https://files.retropie.org.uk/binaries/buster/rpi1/libsdl2-dev_2.0.10+5rpi_armhf.deb -O work/libsdl2-dev.deb
 
 
 # collect qemu kernel
-emu-files/qemu-rpi-kernel: emu-files
-	git clone --depth=1 https://github.com/dhruvvyas90/qemu-rpi-kernel.git emu-files/qemu-rpi-kernel
+work/qemu-rpi-kernel: work
+	git clone --depth=1 https://github.com/dhruvvyas90/qemu-rpi-kernel.git work/qemu-rpi-kernel
 
 
 # collect zip of raspbian-lite image
-emu-files/raspbian-lite.zip: emu-files
-	wget https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-03-25/2021-03-04-raspios-buster-armhf-lite.zip -O  emu-files/raspbian-lite.zip
+work/raspbian-lite.zip: work
+	wget https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-03-25/2021-03-04-raspios-buster-armhf-lite.zip -O  work/raspbian-lite.zip
 
 # extract raspberrypi-lite image
-emu-files/raspbian-lite.img: emu-files/raspbian-lite.zip
-	cd emu-files && \
+work/raspbian-lite.img: work/raspbian-lite.zip
+	cd work && \
 	unzip raspbian-lite.zip && \
 	mv *armhf-lite.img raspbian-lite.img
 
