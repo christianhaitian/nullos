@@ -37,8 +37,8 @@ cat << PAKEMON | sudo tee emu-files/root/etc/init.d/pakemon
 
 ### BEGIN INIT INFO
 # Provides:          pakemon
-# Required-Start:    $local_fs
-# Required-Stop:     $local_fs
+# Required-Start:    \$local_fs
+# Required-Stop:     \$local_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Pakemon
@@ -47,7 +47,7 @@ cat << PAKEMON | sudo tee emu-files/root/etc/init.d/pakemon
 
 export SDL_RENDER_DRIVER=opengles2
 
-case "$1" in
+case "\$1" in
   start)
     love /home/pi/pakemon/src &
     ;;
@@ -139,7 +139,7 @@ cp emu-files/*.deb emu-files/root/tmp/
 
 cat << CHROOT | sudo chroot emu-files/root bash
 apt update && apt upgrade -y
-apt install -y plymouth plymouth-label plymouth-themes
+apt install -y plymouth plymouth-label plymouth-themes love
 ln -s /usr/lib/arm-linux-gnueabihf/plymouth/script.so /usr/lib/arm-linux-gnueabihf/plymouth/notnull.so
 plymouth-set-default-theme notnull
 chmod 755 /etc/init.d/pakemon

@@ -39,7 +39,7 @@ emu-files:
 
 
 # build nullos image
-emu-files/nullos.img: emu-files/raspbian-lite.img emu-files/libsdl2.deb emu-files/libsdl2-dev.deb
+emu-files/nullos.img: emu-files/raspbian-lite.img emu-files/libsdl2.deb
 	./build_nullos.sh
 
 # collect libsddl from retropie
