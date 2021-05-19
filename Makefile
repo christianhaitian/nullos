@@ -62,6 +62,7 @@ emu-files/raspbian-lite.zip: emu-files
 
 # extract raspberrypi-lite image
 emu-files/raspbian-lite.img: emu-files/raspbian-lite.zip
+	cd emu-files && \
 	unzip raspbian-lite.zip && \
 	mv *armhf-lite.img raspbian-lite.img
 

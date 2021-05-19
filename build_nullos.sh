@@ -144,10 +144,12 @@ ln -s /usr/lib/arm-linux-gnueabihf/plymouth/script.so /usr/lib/arm-linux-gnueabi
 plymouth-set-default-theme notnull
 chmod 755 /etc/init.d/pakemon
 update-rc.d pakemon defaults
-apt install -f /tmp/*.deb
+apt install -y /tmp/*.deb
 rm /tmp/*.deb
 apt-get clean
 CHROOT
+
+# TODO: build love, remove build-tools & libs
 
 # unmount & remove loop
 sudo umount -f emu-files/root/boot
