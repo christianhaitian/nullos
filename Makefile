@@ -21,9 +21,7 @@ emu: emu-files/raspbian-lite.img emu-files/qemu-rpi-kernel ## run raspbian-lite 
 
 
 .PHONY: debs
-debs: docker-build ## build custom debs in work/
-	docker run --platform armhf -v ${PWD}/work:/work --rm pisdlbuild
-	docker run --platform armhf -v ${PWD}/work:/work --rm pilovebuild
+debs: emu-files/libsdl2.deb emu-files/libsdl2-dev.deb ## grab debs for SDL
 
 
 .PHONY: clean
@@ -33,26 +31,30 @@ clean: ## clean up built files
 
 ### These support the above targets
 
-# setup docker for building debs
-.PHONY: docker-build
-docker-build:
-	docker build -f docker/sdl.Dockerfile -t pisdlbuild docker/
-	docker build -f docker/love.Dockerfile -t pilovebuild docker/
+emu-files:
+	mkdir -p emu-files/
+
+
+# collect libsddl from retropie
+emu-files/libsdl2.deb: emu-files
+	wget https://files.retropie.org.uk/binaries/buster/rpi1/libsdl2-2.0-0_2.0.10+5rpi_armhf.deb -O emu-files/libsdl2.deb
+
+# collect libsdl-dev from retropie
+emu-files/libsdl2-dev.deb: emu-files
+	wget https://files.retropie.org.uk/binaries/buster/rpi1/libsdl2-dev_2.0.10+5rpi_armhf.deb -O emu-files/libsdl2-dev.deb
+
 
 # collect qemu kernel
-emu-files/qemu-rpi-kernel:
-	mkdir -p emu-files/ && \
+emu-files/qemu-rpi-kernel: emu-files
 	git clone --depth=1 https://github.com/dhruvvyas90/qemu-rpi-kernel.git emu-files/qemu-rpi-kernel
 
 
 # collect zip of raspbian-lite image
-emu-files/raspbian-lite.zip:
-	mkdir -p emu-files/ && \
+emu-files/raspbian-lite.zip: emu-files
 	wget https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-03-25/2021-03-04-raspios-buster-armhf-lite.zip -O  emu-files/raspbian-lite.zip
 
 # extract raspberrypi-lite image
 emu-files/raspbian-lite.img: emu-files/raspbian-lite.zip
-	cd emu-files && \
 	unzip raspbian-lite.zip && \
   mv *armhf-lite.img raspbian-lite.img
 
