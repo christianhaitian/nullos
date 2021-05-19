@@ -29,7 +29,7 @@ nullos: work/nullos.img ## generate a custom nullos disk
 
 .PHONY: clean
 clean: ## clean up built files
-	sudo rm -rf work work
+	sudo rm -rf work
 
 
 ### These support the above targets
