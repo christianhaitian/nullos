@@ -139,7 +139,7 @@ cp emu-files/*.deb emu-files/root/tmp/
 
 cat << CHROOT | sudo chroot emu-files/root bash
 apt update && apt upgrade -y
-apt install -y plymouth plymouth-label plymouth-themes love
+apt install -y plymouth plymouth-label plymouth-themes
 ln -s /usr/lib/arm-linux-gnueabihf/plymouth/script.so /usr/lib/arm-linux-gnueabihf/plymouth/notnull.so
 plymouth-set-default-theme notnull
 chmod 755 /etc/init.d/pakemon
@@ -149,7 +149,7 @@ rm /tmp/*.deb
 apt-get clean
 CHROOT
 
-# TODO: build love, remove build-tools & libs
+# TODO: build latest love, remove build-tools & libs
 
 # unmount & remove loop
 sudo umount -f emu-files/root/boot
