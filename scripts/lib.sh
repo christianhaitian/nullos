@@ -5,7 +5,7 @@
 # chroot script used to build dev
 read -r -d '' SCRIPT_DEV <<'SCRIPT_DEV'
 apt-get update
-apt-get install -y build-essential git debhelper dh-autoreconf pkg-config libtool g++ libfreetype6-dev luajit libluajit-5.1-dev libmodplug-dev libmpg123-dev libopenal-dev libphysfs-dev libogg-dev libvorbis-dev libtheora-dev zlib1g-dev
+apt-get install -y git build-essential git debhelper dh-autoreconf pkg-config libtool g++ libfreetype6-dev luajit libluajit-5.1-dev libmodplug-dev libmpg123-dev libopenal-dev libphysfs-dev libogg-dev libvorbis-dev libtheora-dev zlib1g-dev
 apt-get install -y /tmp/libsdl2.deb /tmp/libsdl2-dev.deb
 SCRIPT_DEV
 
@@ -80,7 +80,7 @@ yellow() {
 
 # ensure OS deps are installed
 yellow "Checking depedencies..."
-sudo apt-get -qq install -y binfmt-support qemu-user-static git
+sudo apt-get -qq install -y binfmt-support qemu-user-static git qemu-utils
 export WORK_DIR=$(realpath work)
 mkdir -p "${WORK_DIR}/root"
 
@@ -290,8 +290,8 @@ resize_image() {
   IMAGE_FILE="${1}"
   SIZE="${2}"
   qemu-img resize "${IMAGE_FILE}" -f raw $SIZE
+  echo "- +" | sfdisk -N2 "${IMAGE_FILE}"
   LOOP=$(sudo losetup -fP --show "${IMAGE_FILE}")
-  echo "- +" | sudo sfdisk -N 2 $LOOP
   sudo e2fsck -f "${LOOP}p2"
   sudo resize2fs "${LOOP}p2"
   sudo losetup -d $LOOP

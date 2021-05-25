@@ -9,17 +9,21 @@ clean: ## clean up built files
 	@sudo rm -rf work
 
 .PHONY: chroot
-chroot: ## Chroot into target nullos image
+chroot: ## Chroot into target nullos image to check stuff out o rinstall things, manually
 	@./scripts/chroot-nullos.sh
 
-.PHONY: chroot-raspbian
-chroot-raspbian: ## Chroot into raspbian-lite image to check stuff out
+.PHONY: raspbian
+raspbian: ## Chroot into raspbian-lite image to check stuff out
 	@./scripts/chroot-raspbian.sh
 
-.PHONY: chroot-dev
-chroot-dev: ## Chroot into dev-image to manually build stuff
+.PHONY: dev
+dev: ## Chroot into dev-image to manually build stuff
 	@./scripts/chroot-dev.sh
 
 .PHONY: build
 build: ## Build nullos image
 	@./scripts/chroot-nullos.sh echo "Image built"
+
+.PHONY: love
+love: ## Just build love debs
+	@./scripts/build-love.sh
