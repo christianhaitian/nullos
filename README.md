@@ -10,7 +10,7 @@ This is basically a minimal version of [jelos](https://github.com/JustEnoughLinu
 
 Here is what I did on Mac M1:
 
-```
+```sh
 brew install lima
 limactl start template://debian
 
@@ -23,7 +23,7 @@ On a linux system, you should be able to just run `./nullos-rk.sh`
 
 You can use the outputted image, like this:
 
-```
+```sh
 D=$(date +"%m-%d-%Y")
 
 # put directly on SD card like this:
