@@ -2,6 +2,16 @@
 
 DISKFILE="nullos-rk-$(date +"%m-%d-%Y").qcow2"
 
+DIR=$PWD
+
+function finish {
+  sync
+  umount "${DIR}/root/boot"
+  umount "${DIR}/root"
+  qemu-nbd --disconnect /dev/nbd0
+}
+trap finish EXIT
+
 sudo apt install -y build-essential debootstrap unzip git dosfstools qemu-utils
 
 if [ "$(uname -m)" == "aarch64" ]; then
@@ -28,7 +38,7 @@ sudo mount /dev/nbd0p2 root
 sudo mkdir -p root/boot
 sudo mount /dev/nbd0p1 root/boot
 
-sudo ${BOOTSTRAP} bullseye root http://deb.debian.org/debian/
+sudo ${BOOTSTRAP} bullseye root https://deb.debian.org/debian
 
 wget https://dn.odroid.com/RK3326/ODROID-GO-Advance/rk3326_r13p0_gbm_with_vulkan_and_cl.zip
 unzip rk3326_r13p0_gbm_with_vulkan_and_cl.zip
@@ -40,8 +50,3 @@ rm rk3326_r13p0_gbm_with_vulkan_and_cl.zip
 cd root/boot
 unzip ../../ark-boot-RG351V_v2.0_09262021.zip
 cd ../..
-
-sync
-umount root/boot
-umount root
-qemu-nbd --disconnect /dev/nbd0
