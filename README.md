@@ -14,7 +14,7 @@ Here is what I did on Mac M1:
 brew install lima
 limactl start template://debian
 
-# edit config, make sure ~ is wrtitable
+# edit config, make sure ~ is writable
 
 limactl shell debian ./nullos-rk.sh
 ```
@@ -24,11 +24,14 @@ On a linux system, you should be able to just run `./nullos-rk.sh`
 You can use the outputted image, like this:
 
 ```
+D=$(date +"%m-%d-%Y")
+
 # put directly on SD card like this:
-qemu-img dd -f qcow2 -O raw bs=4M if="nullos-rk-$(date +"%m-%d-%Y").qcow2" of=/dev/sdd
+qemu-img dd -f qcow2 -O raw bs=4M if="nullos-rk-${D}.qcow2" of=/dev/sdd
 
 # convert qcow to raw image
-qemu-img convert "nullos-rk-$(date +"%m-%d-%Y").qcow2" "nullos-rk-$(date +"%m-%d-%Y").raw"
+qemu-img convert "nullos-rk-${D}.qcow2" "nullos-rk-${D}.raw"
+gzip "nullos-rk-${D}.raw" --stdout > "nullos-rk-${D}.img.gz"
 ```
 
 
