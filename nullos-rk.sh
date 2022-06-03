@@ -6,9 +6,9 @@ DIR=$PWD
 
 function finish {
   sync
-  umount "${DIR}/root/boot"
-  umount "${DIR}/root"
-  qemu-nbd --disconnect /dev/nbd0
+  sudo umount "${DIR}/root/boot"
+  sudo umount "${DIR}/root"
+  sudo qemu-nbd --disconnect /dev/nbd0
 }
 trap finish EXIT
 
@@ -26,15 +26,15 @@ qemu-img create -f qcow2 "${DISKFILE}" 2G
 sudo modprobe nbd max_part=8
 sudo qemu-nbd --connect=/dev/nbd0 "${DISKFILE}"
 
-cat << EOF | sudo sfdisk /dev/nbd0
+cat << EOF | sudo sfdisk /dev/nbd1
 /dev/nbd0p1 : start=        2048, size=      204800, type=6
 /dev/nbd0p2 : start=      206848, size=     3987456, type=83
 EOF
 
-sudo mkfs -j /dev/nbd0p2
+sudo mkfs -j /dev/nbd1p2
 sudo mkfs -t fat /dev/nbd0p1
 sudo mkdir -p root
-sudo mount /dev/nbd0p2 root
+sudo mount /dev/nbd1p2 root
 sudo mkdir -p root/boot
 sudo mount /dev/nbd0p1 root/boot
 
@@ -48,5 +48,5 @@ sudo mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl root/usr/local/lib/
 rm rk3326_r13p0_gbm_with_vulkan_and_cl.zip
 
 cd root/boot
-unzip ../../ark-boot-RG351V_v2.0_09262021.zip
+sudo unzip ../../ark-boot-RG351V_v2.0_09262021.zip
 cd ../..
