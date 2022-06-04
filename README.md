@@ -23,6 +23,13 @@ limactl start template://debian
 limactl shell debian ./nullos-rk.sh
 ```
 
+Then you can clean up like this:
+
+```
+limactl stop debian
+limactl rm debian
+```
+
 On a linux system, you should be able to just run `./nullos-rk.sh`
 
 You can use the outputted image, like this:
