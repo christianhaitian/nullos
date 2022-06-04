@@ -9,7 +9,7 @@ sudo apt install -y build-essential debootstrap unzip git dosfstools qemu-utils
 
 DISKFILE="nullos-rk-$(date +"%m-%d-%Y").qcow2"
 DEVICE_NBD="/dev/nbd0"
-DIR_OUT="${PWD}"
+DIR_OUT="$( realpath "${PWD}" )"
 
 # dowload prebuilt mali drivers
 if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
@@ -68,7 +68,8 @@ sudo mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/us
 
 # TODO: make gamepad-friendly "welcome" screen to set things up
 
+UUID=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
 cd "${DIR_OUT}/root/boot"
 sudo unzip "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
 cd "${DIR_OUT}"
-sed "s/ROOTUUID/${UUID}/g" -i "${DIR_OUT}/root/boot/boot.ini"
+sudo sed "s/ROOTUUID/${UUID}/g" -i "${DIR_OUT}/root/boot/boot.ini"
