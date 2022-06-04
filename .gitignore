@@ -1,5 +1,7 @@
 .DS_Store
 root
+
+*.zip
 *.qcow2
 *.raw
 *.img.gz
