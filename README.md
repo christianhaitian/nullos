@@ -31,7 +31,7 @@ You can use the outputted image, like this:
 D=$(date +"%m-%d-%Y")
 
 # put directly on SD card like this:
-qemu-img dd -f qcow2 -O raw bs=4M if="nullos-rk-${D}.qcow2" of=/dev/sdd
+sudo qemu-img dd -f qcow2 -O raw bs=4M if="nullos-rk-${D}.qcow2" of=/dev/disk4
 
 # convert qcow to raw image
 qemu-img convert "nullos-rk-${D}.qcow2" "nullos-rk-${D}.raw"
