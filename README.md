@@ -53,7 +53,7 @@ gzip "nullos-rk-${D}.raw" --stdout > "nullos-rk-${D}.img.gz"
 
 ## thanks
 
-I could not have made this, or a lot of projects I work on without the amazing work & help by these awesome developers:
+I could not have made this without the amazing work & help by these awesome developers:
 
 - Christian Haitian (ArkOS)
 - fewt (JELOS)
