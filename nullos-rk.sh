@@ -19,15 +19,21 @@ GREEN="\e[32m"
 YELLOW="\e[33m"
 ENDCOLOR="\e[0m"
 
+function say {
+  SAY_TEXT="${1}"
+  SAY_COLOR=${2:-$YELLOW}
+  printf "${SAY_COLOR}${SAY_TEXT}${ENDCOLOR}\n"
+}
+
 BOOT_ONLY=0
 if [ ! -z "${1}" ] && [ "${1}" == "boot" ];then
-  printf "${YELLOW}You used boot option.${ENDCOLOR}\n"
+  say "You used boot option."
   BOOT_ONLY=1
 fi
 
 # clean up on exit
 function finish {
-  printf "${YELLOW}Unmounting disk image.${ENDCOLOR}\n"
+  say "Unmounting disk image."
   cd "${DIR_OUT}"
   sudo sync
   sudo umount "${DIR_OUT}/root/boot"
@@ -38,11 +44,15 @@ trap finish EXIT
 
 # build disk image
 if [ "${BOOT_ONLY}" == 0 ]; then
-  printf "${YELLOW}Creating disk image.${ENDCOLOR}\n"
+  say "Creating disk image."
   qemu-img create -f qcow2 "${DIR_OUT}/${DISKFILE}" 2G
-  sudo modprobe nbd max_part=8
-  sudo qemu-nbd --connect="${DEVICE_NBD}" "${DIR_OUT}/${DISKFILE}"
+fi
 
+sudo modprobe nbd max_part=8
+sudo qemu-nbd --connect="${DEVICE_NBD}" "${DIR_OUT}/${DISKFILE}"
+
+if [ "${BOOT_ONLY}" == 0 ]; then
+  say "Paritioning & formatting disk image."
   cat << EOF | sudo sfdisk --wipe always ${DEVICE_NBD}
 label: dos
 device:${DEVICE_NBD}
@@ -60,11 +70,11 @@ EOF
   sudo e2label ${DEVICE_NBD}p2 NULLOS
 fi
 
-printf "${YELLOW}Mounting root on ${DIR_OUT}/root.${ENDCOLOR}\n"
+say "Mounting root on ${DIR_OUT}/root."
 sudo mkdir -p "${DIR_OUT}/root"
 sudo mount "${DEVICE_NBD}p2" "${DIR_OUT}/root"
 
-printf "${YELLOW}Mounting boot on ${DIR_OUT}/root/boot.${ENDCOLOR}\n"
+say "Mounting boot on ${DIR_OUT}/root/boot."
 sudo mkdir -p "${DIR_OUT}/root/boot"
 sudo mount "${DEVICE_NBD}p1" "${DIR_OUT}/root/boot"
 
@@ -72,21 +82,21 @@ sudo mount "${DEVICE_NBD}p1" "${DIR_OUT}/root/boot"
 
 # for dev, use boot/ or download zip
 if [ -d "${DIR_OUT}/boot" ];then
-  printf "${YELLOW}Copying dev boot/.${ENDCOLOR}\n"
+  say "Copying dev boot/."
   sudo cp -R "${DIR_OUT}/boot"/* "${DIR_OUT}/root/boot/"
 else
   # download prebuilt /boot from arkOS (with light modification)
   if [ ! -f "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip" ];then
-    printf "${YELLOW}Downloading ArkOS zip boot.${ENDCOLOR}\n"
+    say "Downloading ArkOS zip boot."
     wget https://github.com/notnullgames/nullos/releases/download/rk-first/ark-boot-RG351V_v2.0_09262021.zip -O "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
   fi
-  printf "${YELLOW}Extracting ArkOS zip boot.${ENDCOLOR}\n"
+  say "Extracting ArkOS zip boot."
   cd "${DIR_OUT}/root/boot"
   sudo unzip "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
 fi
 
 if [ ! -z "${0}" ] && [ "${0}" == "boot" ];then
-  printf "${YELLOW}Exiting because you used boot option.${ENDCOLOR}\n"
+  say "Exiting because you used boot option."
   exit 0
 fi
 
@@ -95,13 +105,13 @@ if [ "${BOOT_ONLY}" == 0 ]; then
 
   # dowload prebuilt mali drivers
   if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
-    printf "${YELLOW}Downloading mali GPU drivers.${ENDCOLOR}\n"
+    say "Downloading mali GPU drivers."
     wget https://dn.odroid.com/RK3326/ODROID-GO-Advance/rk3326_r13p0_gbm_with_vulkan_and_cl.zip -O "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
   fi
 
   # extract mali drivers
   cd "${DIR_OUT}"
-  printf "${YELLOW}Extracting mali GPU drivers.${ENDCOLOR}\n"
+  say "Extracting mali GPU drivers."
   unzip "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
   sudo mkdir -p "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/" "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/"
   sudo mv libmali.so_rk3326_gbm_arm64_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/libmali-bifrost-g31-rxp0-gbm.so"
@@ -111,13 +121,13 @@ if [ "${BOOT_ONLY}" == 0 ]; then
 fi
 
 # update UUID
-printf "${YELLOW}Updating boot to use {UUID_ROOT}=${UUID_ROOT}.${ENDCOLOR}\n"
+say "Updating boot to use {UUID_ROOT}=${UUID_ROOT}."
 UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
 cd "${DIR_OUT}"
 sudo sed "s/{UUID_ROOT}/${UUID_ROOT}/g" -i "${DIR_OUT}/root/boot/boot.ini"
 
 if [ "${BOOT_ONLY}" == 0 ]; then
-  printf "${GREEN}Disk image created at ${DISKFILE}.${ENDCOLOR}\n"
+  say "Disk image created at ${DISKFILE}." $GREEN
 else
-  printf "${GREEN}Boot modified at ${DISKFILE}.${ENDCOLOR}\n"
+  say "Boot modified at ${DISKFILE}." $GREEN
 fi
