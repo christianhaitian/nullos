@@ -70,4 +70,5 @@ sudo mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/us
 
 cd "${DIR_OUT}/root/boot"
 sudo unzip "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
-sed "s/ROOTUUID/${UUID}/g" -i boot.ini
+cd "${DIR_OUT}"
+sed "s/ROOTUUID/${UUID}/g" -i "${DIR_OUT}/root/boot/boot.ini"
