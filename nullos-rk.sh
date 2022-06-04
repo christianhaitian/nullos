@@ -47,12 +47,12 @@ sudo mount "${DEVICE_NBD}p1" "${DIR_OUT}/root/boot"
 
 sudo debootstrap --arch arm64 bullseye root https://deb.debian.org/debian
 
+# extract mali drivers
 cd "${DIR_OUT}"
 unzip "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
 sudo mkdir -p "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/" "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/"
 sudo mv libmali.so_rk3326_gbm_arm64_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/libmali-bifrost-g31-rxp0-gbm.so"
 sudo mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/libmali-bifrost-g31-rxp0-gbm.so"
-rm "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
 
 cd "${DIR_OUT}/root/boot"
 sudo unzip "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
