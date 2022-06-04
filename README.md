@@ -4,9 +4,13 @@ Fast-booting OS that is barely tuned from debian bullseye. There are 2 flavors: 
 
 In order to use it, you will need docker & qemu.
 
-# rk
+## rk
 
 This is basically a minimal version of [jelos](https://github.com/JustEnoughLinuxOS/distribution) or [arkos](https://github.com/christianhaitian/arkos) with debian system installed on top.
+
+You can get a pre-compiled [release image](https://github.com/notnullgames/nullos/releases) and install the img.gz file with [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+
+### creating image
 
 Here is what I did on Mac M1:
 
@@ -38,8 +42,6 @@ gzip "nullos-rk-${D}.raw" --stdout > "nullos-rk-${D}.img.gz"
 ## pi
 
 > **WARNING** This was the original target, but dev has slowed, since I have a RG351V, now. The current main of this repo no longer builds for this, but I will probably come back to it.
-
-You should be able to grab the `img.gz` file from the [latest release](https://github.com/notnullgames/nullos/releases) and extract it to your >10G SD card with `dd` or hwatever you like to use to turn pi image-files into SD cards.
 
 
 ## thanks
