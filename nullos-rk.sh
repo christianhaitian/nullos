@@ -11,16 +11,6 @@ DISKFILE="nullos-rk-$(date +"%m-%d-%Y").qcow2"
 DEVICE_NBD="/dev/nbd0"
 DIR_OUT="$( realpath "${PWD}" )"
 
-# dowload prebuilt mali drivers
-if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
-  wget https://dn.odroid.com/RK3326/ODROID-GO-Advance/rk3326_r13p0_gbm_with_vulkan_and_cl.zip -O "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
-fi
-
-# download prebuilt /boot from arkOS (with light modification)
-if [ ! -f "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip" ];then
-  wget https://github.com/notnullgames/nullos/releases/download/rk-first/ark-boot-RG351V_v2.0_09262021.zip -O "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
-fi
-
 # clean up on exit
 function finish {
   cd "${DIR_OUT}"
@@ -57,7 +47,12 @@ sudo mount "${DEVICE_NBD}p2" "${DIR_OUT}/root"
 sudo mkdir -p "${DIR_OUT}/root/boot"
 sudo mount "${DEVICE_NBD}p1" "${DIR_OUT}/root/boot"
 
-sudo debootstrap --arch arm64 bullseye root https://deb.debian.org/debian
+sudo debootstrap --arch arm64 bullseye "${DIR_OUT}/root" https://deb.debian.org/debian
+
+# dowload prebuilt mali drivers
+if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
+  wget https://dn.odroid.com/RK3326/ODROID-GO-Advance/rk3326_r13p0_gbm_with_vulkan_and_cl.zip -O "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
+fi
 
 # extract mali drivers
 cd "${DIR_OUT}"
@@ -68,8 +63,19 @@ sudo mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/us
 
 # TODO: make gamepad-friendly "welcome" screen to set things up
 
-UUID=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
-cd "${DIR_OUT}/root/boot"
-sudo unzip "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
+# for dev, use boot/ or download zip
+if [ -d "${DIR_OUT}/boot" ];then
+  sudo cp -R "${DIR_OUT}/boot"/* "${DIR_OUT}/root/boot/"
+else
+  # download prebuilt /boot from arkOS (with light modification)
+  if [ ! -f "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip" ];then
+    wget https://github.com/notnullgames/nullos/releases/download/rk-first/ark-boot-RG351V_v2.0_09262021.zip -O "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
+  fi
+  cd "${DIR_OUT}/root/boot"
+  sudo unzip "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
+fi
+
+# update UUID
+UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
 cd "${DIR_OUT}"
-sudo sed "s/ROOTUUID/${UUID}/g" -i "${DIR_OUT}/root/boot/boot.ini"
+sudo sed "s/{UUID_ROOT}/${UUID_ROOT}/g" -i "${DIR_OUT}/root/boot/boot.ini"

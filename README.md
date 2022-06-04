@@ -23,6 +23,8 @@ limactl start template://debian
 limactl shell debian ./nullos-rk.sh
 ```
 
+You should also be able to use qemu or UTM.
+
 Then you can clean up like this:
 
 ```
@@ -35,20 +37,23 @@ On a linux system, you should be able to just run `./nullos-rk.sh`
 You can use the outputted image, like this:
 
 ```sh
-D=$(date +"%m-%d-%Y")
-
 # put directly on SD card like this:
-sudo qemu-img dd -f qcow2 -O raw bs=4M if="nullos-rk-${D}.qcow2" of=/dev/disk4
+sudo qemu-img dd -f qcow2 -O raw bs=100M if="nullos-rk-$(date +"%m-%d-%Y").qcow2" of=/dev/disk4
 
 # convert qcow to raw image
-qemu-img convert "nullos-rk-${D}.qcow2" "nullos-rk-${D}.raw"
-gzip "nullos-rk-${D}.raw" --stdout > "nullos-rk-${D}.img.gz"
+qemu-img convert "nullos-rk-${D}.qcow2" "nullos-rk-$(date +"%m-%d-%Y").raw"
+gzip "nullos-rk-$(date +"%m-%d-%Y").raw" --stdout > "nullos-rk-$(date +"%m-%d-%Y").img.gz"
 ```
 
 
 ## pi
 
 > **WARNING** This was the original target, but dev has slowed, since I have a RG351V, now. The current main of this repo no longer builds for this, but I will probably come back to it.
+
+
+## art
+
+- bootscreen from "Another World" / "Out Of This World" on Amiga
 
 
 ## thanks
