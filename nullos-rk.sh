@@ -86,13 +86,13 @@ if [ -d "${DIR_OUT}/boot" ];then
   sudo cp -R "${DIR_OUT}/boot"/* "${DIR_OUT}/root/boot/"
 else
   # download prebuilt /boot from arkOS (with light modification)
-  if [ ! -f "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip" ];then
+  if [ ! -f "${DIR_OUT}/ark-boot.zip" ];then
     say "Downloading ArkOS zip boot."
-    wget https://github.com/notnullgames/nullos/releases/download/rk-first/ark-boot-RG351V_v2.0_09262021.zip -O "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
+    wget https://github.com/notnullgames/nullos/releases/download/rk-first/ark-boot-RG351V_v2.0_09262021.zip -O "${DIR_OUT}/ark-boot.zip"
   fi
   say "Extracting ArkOS zip boot."
   cd "${DIR_OUT}/root/boot"
-  sudo unzip "${DIR_OUT}/ark-boot-RG351V_v2.0_09262021.zip"
+  sudo unzip "${DIR_OUT}/ark-boot.zip"
 fi
 
 if [ ! -z "${0}" ] && [ "${0}" == "boot" ];then
@@ -117,7 +117,32 @@ if [ "${BOOT_ONLY}" == 0 ]; then
   sudo mv libmali.so_rk3326_gbm_arm64_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/libmali-bifrost-g31-rxp0-gbm.so"
   sudo mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/libmali-bifrost-g31-rxp0-gbm.so"
 
-  # TODO: make gamepad-friendly "welcome" screen to set things up
+  say "Setting up things in chroot."
+  cat << EOF | sudo chroot "${DIR_OUT}/root"
+apt install -y curl
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt install -y openssh-server nodejs connman ofono bluez wpasupplicant
+systemctl disable ssh
+echo "PermitRootLogin without-password" >> /etc/ssh/sshd_config
+echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+printf "null0\nnull0\n" | passwd
+apt-get clean
+sudo ln -s /boot/nullos.conf /var/lib/connman/nullos.conf
+
+echo "nullos" > /etc/hostname
+
+cat << NET > /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+NET
+
+EOF
+
+  # TODO: install plymouth and themes?: https://github.com/adi1090x/plymouth-themes
 fi
 
 # update UUID

@@ -5,4 +5,4 @@
 *.zip
 *.qcow2
 *.raw
-*.img.gz
+*.gz

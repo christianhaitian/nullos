@@ -10,6 +10,19 @@ This is basically a minimal version of [jelos](https://github.com/JustEnoughLinu
 
 You can get a pre-compiled [release image](https://github.com/notnullgames/nullos/releases) and install the img.gz file with [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
+You can edit /boot/nullos.conf to setup wifi & ssh and other things.
+
+```ini
+[service_wifi]
+Type = wifi
+Name = my_home_wifi
+Passphrase = secret
+
+[service_ssh]
+Type = ssh
+Enabled = true
+```
+
 ### creating image
 
 Here is what I did on Mac M1:
@@ -41,7 +54,7 @@ You can use the outputted image, like this:
 sudo qemu-img dd -f qcow2 -O raw bs=100M if="nullos-rk-$(date +"%m-%d-%Y").qcow2" of=/dev/disk4
 
 # convert qcow to raw image
-qemu-img convert "nullos-rk-${D}.qcow2" "nullos-rk-$(date +"%m-%d-%Y").raw"
+qemu-img convert "nullos-rk-$(date +"%m-%d-%Y").qcow2" "nullos-rk-$(date +"%m-%d-%Y").raw"
 gzip "nullos-rk-$(date +"%m-%d-%Y").raw" --stdout > "nullos-rk-$(date +"%m-%d-%Y").img.gz"
 ```
 
@@ -55,6 +68,13 @@ gzip "nullos-rk-$(date +"%m-%d-%Y").raw" --stdout > "nullos-rk-$(date +"%m-%d-%Y
 
 - bootscreen from "Another World" / "Out Of This World" on Amiga
 
+
+## todo
+
+- qcow overlays for multiple device disks faster
+- /boot/settings.ini: [example](https://github.com/JustEnoughLinuxOS/distribution/blob/main/packages/jelos/config/system/configs/system.cfg) [usage](https://github.com/JustEnoughLinuxOS/distribution/blob/main/packages/jelos/sources/scripts/wifictl) [parser](https://github.com/JustEnoughLinuxOS/distribution/blob/main/packages/jelos/profile.d/02-distribution#L17)
+- use [network-manager](https://www.npmjs.com/package/node-network-manager) to manage internet
+- [cache debootstrap](http://cheesehead-techblog.blogspot.com/2012/01/local-file-cache-to-speed-up.html) in dev environment?
 
 ## thanks
 
