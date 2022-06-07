@@ -78,8 +78,6 @@ gzip "nullos-rk-$(date +"%m-%d-%Y").raw" --stdout > "nullos-rk-$(date +"%m-%d-%Y
 ## todo
 
 - qcow overlays for multiple device disks faster
-- /boot/settings.ini: [example](https://github.com/JustEnoughLinuxOS/distribution/blob/main/packages/jelos/config/system/configs/system.cfg) [usage](https://github.com/JustEnoughLinuxOS/distribution/blob/main/packages/jelos/sources/scripts/wifictl) [parser](https://github.com/JustEnoughLinuxOS/distribution/blob/main/packages/jelos/profile.d/02-distribution#L17)
-- use [network-manager](https://www.npmjs.com/package/node-network-manager) to manage internet
 - [cache debootstrap](http://cheesehead-techblog.blogspot.com/2012/01/local-file-cache-to-speed-up.html) in dev environment?
 
 ## thanks
