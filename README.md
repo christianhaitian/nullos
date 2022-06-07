@@ -14,18 +14,24 @@ You can edit /boot/nullos.ini to setup wifi & ssh and other things.
 
 ```ini
 [system]
-password = nullos # root password
+# root password
+password = nullos
+
+# your hostname
 hostname = nullos
 
 [network]
-ssid = "Your WIFI AP"
-psk = "your password"
-ssh = true
+# your wifi settings
+; ssid = "Your WIFI AP"
+; psk = "your password"
+
+# enable wifi
+ssh = false
 ```
 
 ### creating image
 
-Here is what I did on Mac M1:
+You should use [releases](https://github.com/notnullgames/nullos/releases), if you aren't working on the image, but here is what I did on a Mac M1:
 
 ```sh
 brew install lima
@@ -36,7 +42,7 @@ limactl start template://debian
 limactl shell debian ./nullos-rk.sh
 ```
 
-You should also be able to use qemu or UTM.
+You should also be able to use qemu or UTM, too, if you like.
 
 Then you can clean up like this:
 

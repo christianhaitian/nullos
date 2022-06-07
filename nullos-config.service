@@ -1,0 +1,10 @@
+[Unit]
+Description=NullOS Settings
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/nullos-config.py /boot/nullos.ini
+
+[Install]
+WantedBy=multi-user.target
