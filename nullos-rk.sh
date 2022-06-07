@@ -38,13 +38,14 @@ function setup_host {
 function image_create {
   say "Creating disk image."
   qemu-img create -f qcow2 "${DIR_OUT}/${DISKFILE}" 2G
-  sudo modprobe nbd max_part=8
-  sudo qemu-nbd --connect="${DEVICE_NBD}" "${DIR_OUT}/${DISKFILE}"
 }
 
 # mount root & boot from qcow image
 function image_mount {
   say "Mounting disk image."
+
+  sudo modprobe nbd max_part=8
+  sudo qemu-nbd --connect="${DEVICE_NBD}" "${DIR_OUT}/${DISKFILE}"
 
   say "Mounting root on ${DIR_OUT}/root."
   sudo mkdir -p "${DIR_OUT}/root"
@@ -78,9 +79,6 @@ sector-size: 512
 ${DEVICE_NBD}p1 : start=        2048, size=      204800,  type=c,   name=BOOT, bootable
 ${DEVICE_NBD}p2 : start=      206848, size=     3987456, type=83, name=NULLOS
 EOF
-  UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
-  UUID_BOOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p1")
-
   sudo mkfs -t vfat "${DEVICE_NBD}p1"
   sudo mkfs -t ext2 "${DEVICE_NBD}p2"
 
@@ -105,13 +103,14 @@ function setup_boot {
   fi
 
   # update UUID in /boot/boot.ini
-  say "Updating boot to use {UUID_ROOT}=${UUID_ROOT}."
+  say "Updating boot to use UUID_ROOT=${UUID_ROOT}."
   cd "${DIR_OUT}"
   sudo sed "s/{UUID_ROOT}/${UUID_ROOT}/g" -i "${DIR_OUT}/root/boot/boot.ini"
 }
 
 # put files on /
 function setup_root {
+  say "Building bullseye root with debootstrap"
   sudo debootstrap --arch arm64 bullseye "${DIR_OUT}/root" https://deb.debian.org/debian
 
   # download prebuilt mali drivers
@@ -129,9 +128,9 @@ function setup_root {
   sudo mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/libmali-bifrost-g31-rxp0-gbm.so"
 
   # boot-settings manager
-  sudo mkdir -p "${DIR_OUT}/root/usr/local/bin/"
+  sudo mkdir -p "${DIR_OUT}/root/usr/local/bin/" "${DIR_OUT}/root/etc/systemd/system/"
   sudo cp "${DIR_SOURCE}/nullos-config.py" "${DIR_OUT}/root/usr/local/bin/nullos-config.py"
-  sudo cp "${DIR_SOURCE}/nullos-config.service" "${DIR_OUT}/etc/systemd/system/nullos-config.service"
+  sudo cp "${DIR_SOURCE}/nullos-config.service" "${DIR_OUT}/root/etc/systemd/system/nullos-config.service"
 
   say "Setting up things in chroot."
   cat << EOF | sudo chroot "${DIR_OUT}/root"
@@ -166,11 +165,15 @@ if [ "${BOOT_ONLY}" == 0 ]; then
   image_create
   image_partition
   image_mount
+  UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
+  UUID_BOOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p1")
   setup_boot
   setup_root
   say "Disk image created at ${DISKFILE}." $GREEN
 else
   image_mount
+  UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
+  UUID_BOOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p1")
   setup_boot
   say "Boot modified at ${DISKFILE}." $GREEN
 fi
