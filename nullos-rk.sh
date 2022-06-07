@@ -51,6 +51,9 @@ fi
 sudo modprobe nbd max_part=8
 sudo qemu-nbd --connect="${DEVICE_NBD}" "${DIR_OUT}/${DISKFILE}"
 
+UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
+UUID_BOOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p1")
+
 if [ "${BOOT_ONLY}" == 0 ]; then
   say "Paritioning & formatting disk image."
   cat << EOF | sudo sfdisk --wipe always ${DEVICE_NBD}
@@ -123,31 +126,31 @@ apt install -y curl
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 apt install -y openssh-server nodejs connman ofono bluez wpasupplicant
 systemctl disable ssh
-echo "PermitRootLogin without-password" >> /etc/ssh/sshd_config
-echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+printf "\nPermitRootLogin yes\n" >> /etc/ssh/sshd_config
 printf "null0\nnull0\n" | passwd
 apt-get clean
-sudo ln -s /boot/nullos.conf /var/lib/connman/nullos.conf
 
 echo "nullos" > /etc/hostname
 
 cat << NET > /etc/network/interfaces
-# This file describes the network interfaces available on your system
-# and how to activate them. For more information, see interfaces(5).
-
-# The loopback network interface
 auto lo
 iface lo inet loopback
 NET
 
+cat << FS > /etc/fstab
+UUID=${UUID_ROOT} / ext4 rw,discard,errors=remount-ro,x-systemd.growfs 0 1
+UUID=${UUID_BOOT} /boot vfat defaults 0 0
+FS
+
 EOF
+  
+
 
   # TODO: install plymouth and themes?: https://github.com/adi1090x/plymouth-themes
 fi
 
 # update UUID
 say "Updating boot to use {UUID_ROOT}=${UUID_ROOT}."
-UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
 cd "${DIR_OUT}"
 sudo sed "s/{UUID_ROOT}/${UUID_ROOT}/g" -i "${DIR_OUT}/root/boot/boot.ini"
 

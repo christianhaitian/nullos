@@ -10,17 +10,17 @@ This is basically a minimal version of [jelos](https://github.com/JustEnoughLinu
 
 You can get a pre-compiled [release image](https://github.com/notnullgames/nullos/releases) and install the img.gz file with [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
-You can edit /boot/nullos.conf to setup wifi & ssh and other things.
+You can edit /boot/nullos.ini to setup wifi & ssh and other things.
 
 ```ini
-[service_wifi]
-Type = wifi
-Name = my_home_wifi
-Passphrase = secret
+[system]
+password = nullos # root password
+hostname = nullos
 
-[service_ssh]
-Type = ssh
-Enabled = true
+[network]
+ssid = "Your WIFI AP"
+psk = "your password"
+ssh = true
 ```
 
 ### creating image
