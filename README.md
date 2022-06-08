@@ -37,12 +37,15 @@ You should use [releases](https://github.com/notnullgames/nullos/releases), if y
 brew install lima
 limactl start template://debian
 
-# edit config, make sure ~ is writable
+# edit config, make sure ~ is writable & there are no restrictions on exec/dev
 
+
+# now run the script
 limactl shell debian ./nullos-rk.sh
 ```
 
 You should also be able to use qemu or UTM, too, if you like.
+
 
 Then you can clean up like this:
 

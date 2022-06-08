@@ -3,9 +3,10 @@
 # This will build a qcow bootdisk for nullos
 
 DISKFILE="nullos-rk-$(date +"%m-%d-%Y").qcow2"
-DEVICE_NBD="/dev/nbd0"
+DEVICE_NBD=/dev/nbd0
 DIR_OUT="$( realpath "${PWD}" )"
 DIR_SOURCE="$( realpath "$(dirname "${0}" )" )"
+DEBIAN_MIRROR=${DEBIAN_MIRROR:-https://deb.debian.org/debian}
 
 GREEN="\e[32m"
 YELLOW="\e[33m"
@@ -40,12 +41,19 @@ function image_create {
   qemu-img create -f qcow2 "${DIR_OUT}/${DISKFILE}" 2G
 }
 
-# mount root & boot from qcow image
-function image_mount {
-  say "Mounting disk image."
-
+# create a device out of the qcow image
+function image_bind {
+  say "Binding kernel to image"
   sudo modprobe nbd max_part=8
   sudo qemu-nbd --connect="${DEVICE_NBD}" "${DIR_OUT}/${DISKFILE}"
+}
+
+# mount root & boot from qcow image
+function image_mount {
+  say "Setting up device for disk-image"
+
+  UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
+  UUID_BOOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p1")
 
   say "Mounting root on ${DIR_OUT}/root."
   sudo mkdir -p "${DIR_OUT}/root"
@@ -65,7 +73,6 @@ function image_unmount {
   sudo umount "${DIR_OUT}/root"
   sudo qemu-nbd --disconnect "${DEVICE_NBD}"
 }
-trap image_unmount EXIT
 
 # setup partitions on fresh qcow image
 function image_partition {
@@ -111,7 +118,9 @@ function setup_boot {
 # put files on /
 function setup_root {
   say "Building bullseye root with debootstrap"
-  sudo debootstrap --arch arm64 bullseye "${DIR_OUT}/root" https://deb.debian.org/debian
+
+  # create cache
+  sudo debootstrap --include="curl openssh-server nodejs connman ofono bluez wpasupplicant" --arch arm64 bullseye "${DIR_OUT}/deboot" $DEBIAN_MIRROR
 
   # download prebuilt mali drivers
   if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
@@ -134,9 +143,7 @@ function setup_root {
 
   say "Setting up things in chroot."
   cat << EOF | sudo chroot "${DIR_OUT}/root"
-apt install -y curl
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-apt install -y openssh-server nodejs connman ofono bluez wpasupplicant
 systemctl disable ssh
 printf "\nPermitRootLogin yes\n" >> /etc/ssh/sshd_config
 printf "null0\nnull0\n" | passwd
@@ -158,22 +165,21 @@ FS
 EOF
 }
 
-
 setup_host
+
+trap image_unmount EXIT
 
 if [ "${BOOT_ONLY}" == 0 ]; then
   image_create
+  image_bind
   image_partition
   image_mount
-  UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
-  UUID_BOOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p1")
   setup_boot
   setup_root
   say "Disk image created at ${DISKFILE}." $GREEN
 else
+  image_bind
   image_mount
-  UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
-  UUID_BOOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p1")
   setup_boot
   say "Boot modified at ${DISKFILE}." $GREEN
 fi
