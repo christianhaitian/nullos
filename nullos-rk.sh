@@ -118,8 +118,6 @@ function setup_boot {
 # put files on /
 function setup_root {
   say "Building bullseye root with debootstrap"
-
-  # create cache
   debootstrap --include="curl openssh-server connman ofono bluez wpasupplicant" --arch arm64 bullseye "${DIR_OUT}/root" $DEBIAN_MIRROR
 
   # download prebuilt mali drivers

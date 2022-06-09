@@ -37,7 +37,7 @@ You should use [releases](https://github.com/notnullgames/nullos/releases), if y
 brew install lima
 limactl start template://debian
 
-# edit config, make sure ~ is writable & there are no restrictions on exec/dev
+# edit config, make sure ~ is writable
 
 
 # now run the script
@@ -46,13 +46,21 @@ limactl shell debian sudo ./nullos-rk.sh
 
 You should also be able to use qemu or UTM, too, if you like.
 
-I had a lot of issues with the default debian mirror, but you can override it:
+I had a lot of issues with the default debian mirror, but you can run a local cahe to fix it:
 
 ```
 limactl shell debian
-DEBIAN_MIRROR=https://mirrors.advancedhosters.com/debian ./nullos-rk.sh
+
+sudo apt install -y apt-cacher
+
+sudo DEBIAN_MIRROR=http://127.0.0.1:3142/ftp.us.debian.org/debian ./nullos-rk.sh
 ```
 
+Next time you run it, it will be faster:
+
+```
+limactl shell debian sudo DEBIAN_MIRROR=http://127.0.0.1:3142/ftp.us.debian.org/debian ./nullos-rk.sh
+```
 
 Then you can clean up like this:
 
