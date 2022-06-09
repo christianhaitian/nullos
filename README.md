@@ -1,8 +1,6 @@
 # nullos
 
-Fast-booting OS that is barely tuned from debian bullseye. There are 2 flavors: pi (for 32bit pi devices) and rk (for RK handheld devices, like the RG351V.)
-
-In order to use it, you will need docker & qemu.
+Fast-booting OS that is barely tuned from debian bullseye. There are 2 flavors: pi (for 32bit pi devices) and rk (for RK handheld devices, like the RG351V.) I have stopped working on pi for now, but will probly come back to it.
 
 ## rk
 
@@ -11,6 +9,8 @@ This is basically a minimal version of [jelos](https://github.com/JustEnoughLinu
 You can get a pre-compiled [release image](https://github.com/notnullgames/nullos/releases) and install the img.gz file with [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
 You can edit /boot/nullos.ini to setup wifi & ssh and other things.
+
+### configuration
 
 ```ini
 [system]
@@ -29,63 +29,9 @@ hostname = nullos
 ssh = false
 ```
 
-### creating image
+### development
 
-You should use [releases](https://github.com/notnullgames/nullos/releases), if you aren't working on the image, but here is what I did on a Mac M1:
-
-```sh
-brew install lima
-limactl start template://debian
-
-# edit config, make sure ~ is writable
-
-
-# now run the script
-limactl shell debian sudo ./nullos-rk.sh
-```
-
-You should also be able to use qemu or UTM, too, if you like.
-
-I had a lot of issues with the default debian mirror, but you can run a local cahe to fix it:
-
-```
-limactl shell debian
-
-sudo apt install -y apt-cacher
-
-sudo DEBIAN_MIRROR=http://127.0.0.1:3142/ftp.us.debian.org/debian ./nullos-rk.sh
-```
-
-Next time you run it, it will be faster:
-
-```
-limactl shell debian sudo DEBIAN_MIRROR=http://127.0.0.1:3142/ftp.us.debian.org/debian ./nullos-rk.sh
-```
-
-Then you can clean up like this:
-
-```
-limactl stop debian
-limactl rm debian
-```
-
-On a linux system, you should be able to just run `./nullos-rk.sh`
-
-You can use the outputted image, like this:
-
-```sh
-# put directly on SD card like this:
-sudo qemu-img dd -f qcow2 -O raw bs=100M if="nullos-rk-$(date +"%m-%d-%Y").qcow2" of=/dev/disk4
-
-# convert qcow to raw image
-qemu-img convert "nullos-rk-$(date +"%m-%d-%Y").qcow2" "nullos-rk-$(date +"%m-%d-%Y").raw"
-gzip "nullos-rk-$(date +"%m-%d-%Y").raw" --stdout > "nullos-rk-$(date +"%m-%d-%Y").img.gz"
-```
-
-
-## pi
-
-> **WARNING** This was the original target, but dev has slowed, since I have a RG351V, now. The current main of this repo no longer builds for this, but I will probably come back to it.
+Read [here](https://github.com/notnullgames/nullos/wiki/Development) for notes on making the image.
 
 
 ## art
@@ -101,6 +47,6 @@ gzip "nullos-rk-$(date +"%m-%d-%Y").raw" --stdout > "nullos-rk-$(date +"%m-%d-%Y
 
 I could not have made this without the amazing work & help by these awesome developers:
 
-- Christian Haitian (ArkOS)
-- fewt (JELOS)
-- Johnny on Flame (JELOS)
+- Christian Haitian (ArkOS) had some [great notes](https://github.com/christianhaitian/arkos/wiki/Building) on getting things working
+- fewt (JELOS) made [JELOS](https://github.com/JustEnoughLinuxOS/distribution) and was extremely supportive and helped with some of the ideas
+- Johnny on Flame (JELOS) was extremely supportive and helped with some of the ideas

@@ -1,6 +1,6 @@
 .DS_Store
-/root/
-/boot/
+/root
+/boot-*
 
 *.zip
 *.qcow2

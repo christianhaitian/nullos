@@ -2,7 +2,8 @@
 
 # This will build a qcow bootdisk for nullos
 
-DISKFILE="nullos-rk-$(date +"%m-%d-%Y").qcow2"
+TARGET=${1:-RG351V}
+DISKFILE="nullos-rk-$(date +"%m-%d-%Y")-${TARGET}.qcow2"
 DEVICE_NBD=/dev/nbd0
 DIR_OUT="$( realpath "${PWD}" )"
 DIR_SOURCE="$( realpath "$(dirname "${0}" )" )"
@@ -95,18 +96,18 @@ EOF
 
 # put files on /boot
 function setup_boot {
-  if [ -d "${DIR_OUT}/boot" ];then
-    say "Copying dev boot/."
-    cp -R "${DIR_OUT}/boot"/* "${DIR_OUT}/root/boot/"
+  if [ -d "${DIR_OUT}/boot-${TARGET}" ];then
+    say "Copying dev boot-${TARGET}/."
+    cp -R "${DIR_OUT}/boot-${TARGET}"/* "${DIR_OUT}/root/boot/"
   else
     # download prebuilt /boot from arkOS (with light modification)
-    if [ ! -f "${DIR_OUT}/ark-boot.zip" ];then
-      say "Downloading ArkOS zip boot."
-      wget https://github.com/notnullgames/nullos/releases/download/rk-first/ark-boot-RG351V_v2.0_09262021.zip -O "${DIR_OUT}/ark-boot.zip"
+    if [ ! -f "${DIR_OUT}/ark-boot-${TARGET}.zip" ];then
+      say "Downloading ArkOS zip boot-${TARGET}."
+      wget "https://github.com/notnullgames/nullos/releases/download/rk-first/ark-boot-${TARGET}_v2.0_09262021.zip" -O "${DIR_OUT}/ark-boot-${TARGET}.zip"
     fi
     say "Extracting ArkOS zip boot."
     cd "${DIR_OUT}/root/boot"
-    unzip "${DIR_OUT}/ark-boot.zip"
+    unzip "${DIR_OUT}/ark-boot-${TARGET}.zip"
   fi
 
   # update UUID in /boot/boot.ini
@@ -141,6 +142,7 @@ function setup_root {
 
   say "Setting up things in chroot."
   cat << EOF | chroot "${DIR_OUT}/root"
+/debootstrap/debootstrap --second-stage
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 apt install -y nodejs
 systemctl disable ssh
@@ -159,6 +161,7 @@ NET
 cat << FS > /etc/fstab
 UUID=${UUID_ROOT} / ext4 rw,discard,errors=remount-ro,x-systemd.growfs 0 1
 UUID=${UUID_BOOT} /boot vfat defaults 0 0
+proc             /proc         proc    defaults                 0    0
 FS
 
 cat << ISS > /etc/issues
