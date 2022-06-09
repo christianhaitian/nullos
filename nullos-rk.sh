@@ -31,8 +31,8 @@ function setup_host {
   say "Setting up dev-environment with tools needed to make nullos image"
   # TODO: check to make sure it's running in linux
   # TODO: check to make sure it's running in deb-based linux
-  sudo apt update
-  sudo apt install -y build-essential debootstrap unzip git dosfstools qemu-utils
+  apt update
+  apt install -y build-essential debootstrap unzip git dosfstools qemu-utils
 }
 
 # create the inial qcow image
@@ -44,40 +44,40 @@ function image_create {
 # create a device out of the qcow image
 function image_bind {
   say "Binding kernel to image"
-  sudo modprobe nbd max_part=8
-  sudo qemu-nbd --connect="${DEVICE_NBD}" "${DIR_OUT}/${DISKFILE}"
+  # modprobe nbd max_part=8
+  qemu-nbd --connect="${DEVICE_NBD}" "${DIR_OUT}/${DISKFILE}"
 }
 
 # mount root & boot from qcow image
 function image_mount {
   say "Setting up device for disk-image"
 
-  UUID_ROOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p2")
-  UUID_BOOT=$(sudo blkid -s UUID -o value "${DEVICE_NBD}p1")
+  UUID_ROOT=$(blkid -s UUID -o value "${DEVICE_NBD}p2")
+  UUID_BOOT=$(blkid -s UUID -o value "${DEVICE_NBD}p1")
 
   say "Mounting root on ${DIR_OUT}/root."
-  sudo mkdir -p "${DIR_OUT}/root"
-  sudo mount "${DEVICE_NBD}p2" "${DIR_OUT}/root"
+  mkdir -p "${DIR_OUT}/root"
+  mount "${DEVICE_NBD}p2" "${DIR_OUT}/root"
 
   say "Mounting boot on ${DIR_OUT}/root/boot."
-  sudo mkdir -p "${DIR_OUT}/root/boot"
-  sudo mount "${DEVICE_NBD}p1" "${DIR_OUT}/root/boot"
+  mkdir -p "${DIR_OUT}/root/boot"
+  mount "${DEVICE_NBD}p1" "${DIR_OUT}/root/boot"
 }
 
 # clean up on exit
 function image_unmount {
   say "Unmounting disk image."
   cd "${DIR_OUT}"
-  sudo sync
-  sudo umount "${DIR_OUT}/root/boot"
-  sudo umount "${DIR_OUT}/root"
-  sudo qemu-nbd --disconnect "${DEVICE_NBD}"
+  sync
+  umount "${DIR_OUT}/root/boot"
+  umount "${DIR_OUT}/root"
+  qemu-nbd --disconnect "${DEVICE_NBD}"
 }
 
 # setup partitions on fresh qcow image
 function image_partition {
   say "Paritioning & formatting disk image."
-  cat << EOF | sudo sfdisk --wipe always ${DEVICE_NBD}
+  cat << EOF | sfdisk --wipe always ${DEVICE_NBD}
 label: dos
 device:${DEVICE_NBD}
 unit: sectors
@@ -86,18 +86,18 @@ sector-size: 512
 ${DEVICE_NBD}p1 : start=        2048, size=      204800,  type=c,   name=BOOT, bootable
 ${DEVICE_NBD}p2 : start=      206848, size=     3987456, type=83, name=NULLOS
 EOF
-  sudo mkfs -t vfat "${DEVICE_NBD}p1"
-  sudo mkfs -t ext2 "${DEVICE_NBD}p2"
+  mkfs -t vfat "${DEVICE_NBD}p1"
+  mkfs -t ext2 "${DEVICE_NBD}p2"
 
-  sudo dosfslabel ${DEVICE_NBD}p1 BOOT
-  sudo e2label ${DEVICE_NBD}p2 NULLOS
+  dosfslabel ${DEVICE_NBD}p1 BOOT
+  e2label ${DEVICE_NBD}p2 NULLOS
 }
 
 # put files on /boot
 function setup_boot {
   if [ -d "${DIR_OUT}/boot" ];then
     say "Copying dev boot/."
-    sudo cp -R "${DIR_OUT}/boot"/* "${DIR_OUT}/root/boot/"
+    cp -R "${DIR_OUT}/boot"/* "${DIR_OUT}/root/boot/"
   else
     # download prebuilt /boot from arkOS (with light modification)
     if [ ! -f "${DIR_OUT}/ark-boot.zip" ];then
@@ -106,13 +106,13 @@ function setup_boot {
     fi
     say "Extracting ArkOS zip boot."
     cd "${DIR_OUT}/root/boot"
-    sudo unzip "${DIR_OUT}/ark-boot.zip"
+    unzip "${DIR_OUT}/ark-boot.zip"
   fi
 
   # update UUID in /boot/boot.ini
   say "Updating boot to use UUID_ROOT=${UUID_ROOT}."
   cd "${DIR_OUT}"
-  sudo sed "s/{UUID_ROOT}/${UUID_ROOT}/g" -i "${DIR_OUT}/root/boot/boot.ini"
+  sed "s/{UUID_ROOT}/${UUID_ROOT}/g" -i "${DIR_OUT}/root/boot/boot.ini"
 }
 
 # put files on /
@@ -120,7 +120,7 @@ function setup_root {
   say "Building bullseye root with debootstrap"
 
   # create cache
-  sudo debootstrap --include="curl openssh-server nodejs connman ofono bluez wpasupplicant" --arch arm64 bullseye "${DIR_OUT}/deboot" $DEBIAN_MIRROR
+  debootstrap --include="curl openssh-server connman ofono bluez wpasupplicant" --arch arm64 bullseye "${DIR_OUT}/root" $DEBIAN_MIRROR
 
   # download prebuilt mali drivers
   if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
@@ -132,18 +132,19 @@ function setup_root {
   cd "${DIR_OUT}"
   say "Extracting mali GPU drivers."
   unzip "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
-  sudo mkdir -p "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/" "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/"
-  sudo mv libmali.so_rk3326_gbm_arm64_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/libmali-bifrost-g31-rxp0-gbm.so"
-  sudo mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/libmali-bifrost-g31-rxp0-gbm.so"
+  mkdir -p "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/" "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/"
+  mv libmali.so_rk3326_gbm_arm64_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/libmali-bifrost-g31-rxp0-gbm.so"
+  mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/libmali-bifrost-g31-rxp0-gbm.so"
 
   # boot-settings manager
-  sudo mkdir -p "${DIR_OUT}/root/usr/local/bin/" "${DIR_OUT}/root/etc/systemd/system/"
-  sudo cp "${DIR_SOURCE}/nullos-config.py" "${DIR_OUT}/root/usr/local/bin/nullos-config.py"
-  sudo cp "${DIR_SOURCE}/nullos-config.service" "${DIR_OUT}/root/etc/systemd/system/nullos-config.service"
+  mkdir -p "${DIR_OUT}/root/usr/local/bin/" "${DIR_OUT}/root/etc/systemd/system/"
+  cp "${DIR_SOURCE}/nullos-config.py" "${DIR_OUT}/root/usr/local/bin/nullos-config.py"
+  cp "${DIR_SOURCE}/nullos-config.service" "${DIR_OUT}/root/etc/systemd/system/nullos-config.service"
 
   say "Setting up things in chroot."
-  cat << EOF | sudo chroot "${DIR_OUT}/root"
+  cat << EOF | chroot "${DIR_OUT}/root"
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt install -y nodejs
 systemctl disable ssh
 printf "\nPermitRootLogin yes\n" >> /etc/ssh/sshd_config
 printf "null0\nnull0\n" | passwd

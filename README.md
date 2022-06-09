@@ -41,10 +41,17 @@ limactl start template://debian
 
 
 # now run the script
-limactl shell debian ./nullos-rk.sh
+limactl shell debian sudo ./nullos-rk.sh
 ```
 
 You should also be able to use qemu or UTM, too, if you like.
+
+I had a lot of issues with the default debian mirror, but you can override it:
+
+```
+limactl shell debian
+DEBIAN_MIRROR=https://mirrors.advancedhosters.com/debian ./nullos-rk.sh
+```
 
 
 Then you can clean up like this:
