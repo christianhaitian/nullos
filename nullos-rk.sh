@@ -161,6 +161,11 @@ UUID=${UUID_ROOT} / ext4 rw,discard,errors=remount-ro,x-systemd.growfs 0 1
 UUID=${UUID_BOOT} /boot vfat defaults 0 0
 FS
 
+cat << ISS > /etc/issues
+NullOS on Debian GNU/Linux 11 running on \l
+\4
+ISS
+
 EOF
 }
 

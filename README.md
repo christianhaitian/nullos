@@ -95,8 +95,7 @@ gzip "nullos-rk-$(date +"%m-%d-%Y").raw" --stdout > "nullos-rk-$(date +"%m-%d-%Y
 
 ## todo
 
-- qcow overlays for multiple device disks faster
-- [cache debootstrap](http://cheesehead-techblog.blogspot.com/2012/01/local-file-cache-to-speed-up.html) in dev environment?
+- qcow overlays for multiple device disks faster (base disk could be reused to cut down debootstrap, too)
 
 ## thanks
 
