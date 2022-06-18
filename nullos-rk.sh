@@ -2,9 +2,9 @@
 
 # This will build a qcow bootdisk for nullos
 
-TARGET=${1:-RG351V}
-DISKFILE="nullos-rk-$(date +"%m-%d-%Y")-${TARGET}.qcow2"
-DEVICE_NBD=/dev/nbd0
+TARGET=${TARGET:-RG351V}
+DISKFILE="${NAME:-nullos-rk-$(date +"%m-%d-%Y")-${TARGET}.qcow2}"
+DEVICE_NBD=/dev/nbd1
 DIR_OUT="$( realpath "${PWD}" )"
 DIR_SOURCE="$( realpath "$(dirname "${0}" )" )"
 DEBIAN_MIRROR=${DEBIAN_MIRROR:-https://deb.debian.org/debian}
@@ -20,11 +20,26 @@ function say {
   printf "${SAY_COLOR}${SAY_TEXT}${ENDCOLOR}\n"
 }
 
+CHECK_APT_PROXY=$(curl -I http://127.0.0.1:3142/ftp.us.debian.org 2> /dev/null | awk '/HTTP\// {print $2}')
+if [ "${CHECK_APT_PROXY}" == 200 ];then
+  say "Found apt-cache. Using it."
+  DEBIAN_MIRROR=http://127.0.0.1:3142/ftp.us.debian.org/debian
+else
+  say "No apt-cache. Speed things up with sudo apt install -y apt-cacher"
+fi
+
 # run with "boot" arg, and it will just fix up /boot on an existing disk-image and exit
 BOOT_ONLY=0
 if [ ! -z "${1}" ] && [ "${1}" == "boot" ];then
   say "You used boot option."
   BOOT_ONLY=1
+fi
+
+
+LIVE=0
+if [ ! -z "${1}" ] && [ "${1}" == "live" ];then
+  say "You used live option."
+  LIVE=1
 fi
 
 # setup deps in host
@@ -44,8 +59,8 @@ function image_create {
 
 # create a device out of the qcow image
 function image_bind {
-  say "Binding kernel to image"
-  # modprobe nbd max_part=8
+  say "nbd-mounting image"
+  modprobe nbd max_part=8
   qemu-nbd --connect="${DEVICE_NBD}" "${DIR_OUT}/${DISKFILE}"
 }
 
@@ -70,8 +85,9 @@ function image_unmount {
   say "Unmounting disk image."
   cd "${DIR_OUT}"
   sync
-  umount "${DIR_OUT}/root/boot"
-  umount "${DIR_OUT}/root"
+  umount -f "${DIR_OUT}/root/boot"
+  umount -f "${DIR_OUT}/root/dev"
+  umount -f "${DIR_OUT}/root"
   qemu-nbd --disconnect "${DEVICE_NBD}"
 }
 
@@ -135,58 +151,72 @@ function setup_root {
   mv libmali.so_rk3326_gbm_arm64_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/libmali-bifrost-g31-rxp0-gbm.so"
   mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/libmali-bifrost-g31-rxp0-gbm.so"
 
+  say "Setting up files in root."
+
   # boot-settings manager
   mkdir -p "${DIR_OUT}/root/usr/local/bin/" "${DIR_OUT}/root/etc/systemd/system/"
   cp "${DIR_SOURCE}/nullos-config.py" "${DIR_OUT}/root/usr/local/bin/nullos-config.py"
   cp "${DIR_SOURCE}/nullos-config.service" "${DIR_OUT}/root/etc/systemd/system/nullos-config.service"
 
-  say "Setting up things in chroot."
-  cat << EOF | chroot "${DIR_OUT}/root"
-/debootstrap/debootstrap --second-stage
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-apt install -y nodejs
-systemctl disable ssh
-printf "\nPermitRootLogin yes\n" >> /etc/ssh/sshd_config
-printf "null0\nnull0\n" | passwd
-apt-get clean
-systemctl enable nullos-config
+  printf "\nPermitRootLogin yes\n" >> "${DIR_OUT}/root/etc/ssh/sshd_config"
+  echo "nullos" > "${DIR_OUT}/root/etc/hostname"
 
-echo "nullos" > /etc/hostname
-
-cat << NET > /etc/network/interfaces
+  cat << NET > "${DIR_OUT}/root/etc/network/interfaces"
 auto lo
 iface lo inet loopback
 NET
 
-cat << FS > /etc/fstab
+  cat << FS > "${DIR_OUT}/root/etc/fstab"
 UUID=${UUID_ROOT} / ext4 rw,discard,errors=remount-ro,x-systemd.growfs 0 1
 UUID=${UUID_BOOT} /boot vfat defaults 0 0
 proc             /proc         proc    defaults                 0    0
 FS
 
-cat << ISS > /etc/issues
+  cat << WELCOME > "${DIR_OUT}/root/etc/issues"
 NullOS on Debian GNU/Linux 11 running on \l
 \4
-ISS
+WELCOME
 
-EOF
+  say "Setting up things in chroot."
+  cat << CHROOT | chroot "${DIR_OUT}/root"
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt install -y nodejs
+systemctl disable ssh
+printf "null0\nnull0\n" | passwd
+apt-get clean
+systemctl enable nullos-config
+CHROOT
 }
 
 setup_host
 
 trap image_unmount EXIT
 
-if [ "${BOOT_ONLY}" == 0 ]; then
+if [ "${LIVE}" == 1 ]; then
   image_create
   image_bind
   image_partition
   image_mount
   setup_boot
   setup_root
-  say "Disk image created at ${DISKFILE}." $GREEN
+  mount -t bind /dev "${DIR_OUT}/root/dev"
+  say "You are in a chroot of the new disk image. Type exit to continue." $GREEN
+  chroot "${DIR_OUT}/root"
 else
-  image_bind
-  image_mount
-  setup_boot
-  say "Boot modified at ${DISKFILE}." $GREEN
+  if [ "${BOOT_ONLY}" == 0 ]; then
+    image_create
+    image_bind
+    image_partition
+    image_mount
+    setup_boot
+    setup_root
+    say "Disk image created at ${DISKFILE}." $GREEN
+  else
+    image_create
+    image_bind
+    image_partition
+    image_mount
+    setup_boot
+    say "Disk image created at ${DISKFILE} (boot only.)" $GREEN
+  fi
 fi

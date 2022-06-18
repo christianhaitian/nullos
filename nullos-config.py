@@ -27,12 +27,13 @@ try:
   f.write(hostname)
   f.close()
 except:
+  print("Could not set hotname")
   pass
 
 try:
   ssh = config['network']['ssh']
   if ssh:
-    os.system('systemctl enable ssh.service')
+    os.system('systemctl start ssh.service')
 except:
   pass
 

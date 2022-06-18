@@ -4,7 +4,7 @@ Fast-booting OS that is barely tuned from debian bullseye. There are 2 flavors: 
 
 ## rk
 
-This is basically a minimal version of [jelos](https://github.com/JustEnoughLinuxOS/distribution) or [arkos](https://github.com/christianhaitian/arkos) with debian system installed on top.
+This is basically a minimal version of [jelos](https://github.com/JustEnoughLinuxOS/distribution) or [arkos](https://github.com/christianhaitian/arkos) with regular debian system installed on top.
 
 You can get a pre-compiled [release image](https://github.com/notnullgames/nullos/releases) and install the img.gz file with [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
