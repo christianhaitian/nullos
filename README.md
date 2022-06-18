@@ -25,7 +25,7 @@ hostname = nullos
 ; ssid = "Your WIFI AP"
 ; psk = "your password"
 
-# enable wifi
+# enable ssh server
 ssh = false
 ```
 
