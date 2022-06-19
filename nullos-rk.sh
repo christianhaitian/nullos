@@ -115,19 +115,21 @@ EOF
 
 # put files on /boot
 function setup_boot {
-  if [ -d "${DIR_OUT}/boot-${TARGET}" ];then
-    say "Copying dev boot-${TARGET}/."
-    cp -R "${DIR_OUT}/boot-${TARGET}"/* "${DIR_OUT}/root/boot/"
+  if [ -d "${DIR_OUT}/ark-${TARGET}" ];then
+    say "Found ArkOS boot & kernel files."
   else
-    # download prebuilt /boot from arkOS (with light modification)
-    if [ ! -f "${DIR_OUT}/ark-boot-${TARGET}.zip" ];then
-      say "Downloading ArkOS zip boot-${TARGET}."
-      wget "https://github.com/notnullgames/nullos/releases/download/rk-first/ark-boot-${TARGET}_v2.0_09262021.zip" -O "${DIR_OUT}/ark-boot-${TARGET}.zip"
+    if [ -f "${DIR_OUT}/ark-${TARGET}.zip" ];then
+      say "Downloading ArkOS boot & kernel files."
+      wget "https://github.com/notnullgames/nullos/releases/download/rk-first/ark-${TARGET}_v2.0_09262021.zip" -O "${DIR_OUT}/ark-${TARGET}.zip"
     fi
-    say "Extracting ArkOS zip boot."
-    cd "${DIR_OUT}/root/boot"
-    unzip "${DIR_OUT}/ark-boot-${TARGET}.zip"
+    mkdir -p "${DIR_OUT}/ark-${TARGET}"
+    cd "${DIR_OUT}/ark-${TARGET}"
+    unzip "${DIR_OUT}/ark-${TARGET}.zip"
   fi
+  say "Copying ArkOS boot files."
+  cp -R "${DIR_OUT}/ark-${TARGET}/boot/*" "${DIR_OUT}/root/boot/"
+  say "Copying ArkOS kernel files."
+  cp -R "${DIR_OUT}/ark-${TARGET}/modules/*" "${DIR_OUT}/root/lib/modules"
 
   # update UUID in /boot/boot.ini
   say "Updating boot to use UUID_ROOT=${UUID_ROOT}."
