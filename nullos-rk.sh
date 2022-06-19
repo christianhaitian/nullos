@@ -114,7 +114,7 @@ EOF
 }
 
 # put files on /boot
-function setup_boot {
+function setup_ark {
   if [ -d "${DIR_OUT}/ark-${TARGET}" ];then
     say "Found ArkOS boot & kernel files."
   else
@@ -126,10 +126,12 @@ function setup_boot {
     cd "${DIR_OUT}/ark-${TARGET}"
     unzip "${DIR_OUT}/ark-${TARGET}.zip"
   fi
+  
   say "Copying ArkOS boot files."
-  cp -R "${DIR_OUT}/ark-${TARGET}/boot/*" "${DIR_OUT}/root/boot/"
+  cp -R "${DIR_OUT}/ark-${TARGET}/boot/"* "${DIR_OUT}/root/boot/"
+  
   say "Copying ArkOS kernel files."
-  cp -R "${DIR_OUT}/ark-${TARGET}/modules/*" "${DIR_OUT}/root/lib/modules"
+  cp -R "${DIR_OUT}/ark-${TARGET}/modules/"* "${DIR_OUT}/root/lib/modules"
 
   # update UUID in /boot/boot.ini
   say "Updating boot to use UUID_ROOT=${UUID_ROOT}."
@@ -203,7 +205,7 @@ else
     image_bind
     image_partition
     image_mount
-    setup_boot
+    setup_ark
     setup_root
     say "Disk image created at ${DISKFILE}." $GREEN
   else
@@ -211,7 +213,7 @@ else
     image_bind
     image_partition
     image_mount
-    setup_boot
+    setup_ark
     say "Disk image created at ${DISKFILE} (boot only.)" $GREEN
   fi
 fi
