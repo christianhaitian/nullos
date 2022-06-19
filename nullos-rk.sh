@@ -138,7 +138,7 @@ function setup_boot {
 # put files on /
 function setup_root {
   say "Building bullseye root with debootstrap"
-  debootstrap --include="curl openssh-server connman ofono bluez wpasupplicant udev makedev" --arch arm64 bullseye "${DIR_OUT}/root" $DEBIAN_MIRROR
+  debootstrap --include="curl ssh connman ofono bluez wpasupplicant udev makedev" --arch arm64 bullseye "${DIR_OUT}/root" $DEBIAN_MIRROR
 
   # download prebuilt mali drivers
   if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
@@ -183,8 +183,6 @@ systemctl disable ssh
 printf "null0\nnull0\n" | passwd
 apt-get clean
 systemctl enable nullos-config
-cd /dev
-MAKEDEV generic
 CHROOT
 }
 
@@ -193,12 +191,7 @@ setup_host
 trap image_unmount EXIT
 
 if [ "${LIVE}" == 1 ]; then
-  image_create
   image_bind
-  image_partition
-  image_mount
-  setup_boot
-  setup_root
   mount -t bind /dev "${DIR_OUT}/root/dev"
   say "You are in a chroot of the new disk image. Type exit to continue." $GREEN
   chroot "${DIR_OUT}/root"
