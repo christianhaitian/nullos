@@ -3,6 +3,7 @@
 # This will build a qcow bootdisk for nullos
 
 # TODO: break the steps into a series of cached qcow2 images, so we can branch into different builds
+# TODO: use exfat for /boot ?
 
 TARGET=${TARGET:-RG351V}
 DISKFILE="${NAME:-nullos-rk-$(date +"%m-%d-%Y")-${TARGET}.qcow2}"
@@ -137,7 +138,7 @@ function setup_boot {
 # put files on /
 function setup_root {
   say "Building bullseye root with debootstrap"
-  debootstrap --include="curl openssh-server connman ofono bluez wpasupplicant udev" --arch arm64 bullseye "${DIR_OUT}/root" $DEBIAN_MIRROR
+  debootstrap --include="curl openssh-server connman ofono bluez wpasupplicant udev makedev" --arch arm64 bullseye "${DIR_OUT}/root" $DEBIAN_MIRROR
 
   # download prebuilt mali drivers
   if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
@@ -174,11 +175,6 @@ UUID=${UUID_BOOT} /boot vfat defaults 0 0
 proc             /proc         proc    defaults                 0    0
 FS
 
-  cat << WELCOME > "${DIR_OUT}/root/etc/issues"
-NullOS on Debian GNU/Linux 11 running on \l
-\4
-WELCOME
-
   say "Setting up things in chroot."
   cat << CHROOT | chroot "${DIR_OUT}/root"
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
@@ -187,6 +183,8 @@ systemctl disable ssh
 printf "null0\nnull0\n" | passwd
 apt-get clean
 systemctl enable nullos-config
+cd /dev
+MAKEDEV generic
 CHROOT
 }
 
