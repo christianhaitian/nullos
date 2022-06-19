@@ -7,7 +7,7 @@
 
 TARGET=${TARGET:-RG351V}
 DISKFILE="${NAME:-nullos-rk-$(date +"%m-%d-%Y")-${TARGET}.qcow2}"
-DEVICE_NBD=/dev/nbd1
+DEVICE_NBD=/dev/nbd0
 DIR_OUT="$( realpath "${PWD}" )"
 DIR_SOURCE="$( realpath "$(dirname "${0}" )" )"
 DEBIAN_MIRROR=${DEBIAN_MIRROR:-https://deb.debian.org/debian}
@@ -52,6 +52,27 @@ function setup_host {
   # TODO: check to make sure it's running in deb-based linux
   apt update
   apt install -y build-essential debootstrap unzip git dosfstools qemu-utils
+}
+
+# get files needed to build image
+function get_files {
+  if [ -d "${DIR_OUT}/ark-${TARGET}" ];then
+    say "Found ArkOS boot & kernel files."
+  else
+    if [ -f "${DIR_OUT}/ark-${TARGET}.zip" ];then
+      say "Downloading ArkOS boot & kernel files."
+      wget "https://github.com/notnullgames/nullos/releases/download/rk-first/ark-${TARGET}_v2.0_09262021.zip" -O "${DIR_OUT}/ark-${TARGET}.zip"
+    fi
+    mkdir -p "${DIR_OUT}/ark-${TARGET}"
+    cd "${DIR_OUT}/ark-${TARGET}"
+    unzip "${DIR_OUT}/ark-${TARGET}.zip"
+  fi
+
+  # download prebuilt mali drivers
+  if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
+    say "Downloading mali GPU drivers."
+    wget https://dn.odroid.com/RK3326/ODROID-GO-Advance/rk3326_r13p0_gbm_with_vulkan_and_cl.zip -O "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
+  fi
 }
 
 # create the inial qcow image
@@ -113,25 +134,11 @@ EOF
   e2label ${DEVICE_NBD}p2 NULLOS
 }
 
+
 # put files on /boot
-function setup_ark {
-  if [ -d "${DIR_OUT}/ark-${TARGET}" ];then
-    say "Found ArkOS boot & kernel files."
-  else
-    if [ -f "${DIR_OUT}/ark-${TARGET}.zip" ];then
-      say "Downloading ArkOS boot & kernel files."
-      wget "https://github.com/notnullgames/nullos/releases/download/rk-first/ark-${TARGET}_v2.0_09262021.zip" -O "${DIR_OUT}/ark-${TARGET}.zip"
-    fi
-    mkdir -p "${DIR_OUT}/ark-${TARGET}"
-    cd "${DIR_OUT}/ark-${TARGET}"
-    unzip "${DIR_OUT}/ark-${TARGET}.zip"
-  fi
-  
+function setup_boot {
   say "Copying ArkOS boot files."
   cp -R "${DIR_OUT}/ark-${TARGET}/boot/"* "${DIR_OUT}/root/boot/"
-  
-  say "Copying ArkOS kernel files."
-  cp -R "${DIR_OUT}/ark-${TARGET}/modules/"* "${DIR_OUT}/root/lib/modules"
 
   # update UUID in /boot/boot.ini
   say "Updating boot to use UUID_ROOT=${UUID_ROOT}."
@@ -144,12 +151,6 @@ function setup_root {
   say "Building bullseye root with debootstrap"
   debootstrap --include="curl ssh connman ofono bluez wpasupplicant udev makedev" --arch arm64 bullseye "${DIR_OUT}/root" $DEBIAN_MIRROR
 
-  # download prebuilt mali drivers
-  if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
-    say "Downloading mali GPU drivers."
-    wget https://dn.odroid.com/RK3326/ODROID-GO-Advance/rk3326_r13p0_gbm_with_vulkan_and_cl.zip -O "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
-  fi
-
   # extract mali drivers
   cd "${DIR_OUT}"
   say "Extracting mali GPU drivers."
@@ -157,6 +158,9 @@ function setup_root {
   mkdir -p "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/" "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/"
   mv libmali.so_rk3326_gbm_arm64_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/libmali-bifrost-g31-rxp0-gbm.so"
   mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/libmali-bifrost-g31-rxp0-gbm.so"
+
+  say "Copying ArkOS kernel files."
+  cp -R "${DIR_OUT}/ark-${TARGET}/modules/"* "${DIR_OUT}/root/lib/modules"
 
   say "Setting up files in root."
 
@@ -201,19 +205,21 @@ if [ "${LIVE}" == 1 ]; then
   chroot "${DIR_OUT}/root"
 else
   if [ "${BOOT_ONLY}" == 0 ]; then
+    get_files
     image_create
     image_bind
     image_partition
     image_mount
-    setup_ark
+    setup_boot
     setup_root
     say "Disk image created at ${DISKFILE}." $GREEN
   else
+    get_files
     image_create
     image_bind
     image_partition
     image_mount
-    setup_ark
+    setup_boot
     say "Disk image created at ${DISKFILE} (boot only.)" $GREEN
   fi
 fi
