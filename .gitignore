@@ -7,3 +7,5 @@
 *.qcow2
 *.raw
 *.gz
+
+.fuse*

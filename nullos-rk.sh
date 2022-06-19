@@ -3,6 +3,7 @@
 # This will build a qcow bootdisk for nullos
 
 # TODO: break the steps into a series of cached qcow2 images, so we can branch into different builds
+# TODO: build debian kernel package & generate boot instead of getting everything from ArkOS
 # TODO: use exfat for /boot ?
 
 TARGET=${TARGET:-RG351V}
@@ -200,7 +201,6 @@ trap image_unmount EXIT
 
 if [ "${LIVE}" == 1 ]; then
   image_bind
-  mount -t bind /dev "${DIR_OUT}/root/dev"
   say "You are in a chroot of the new disk image. Type exit to continue." $GREEN
   chroot "${DIR_OUT}/root"
 else
