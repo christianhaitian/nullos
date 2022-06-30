@@ -39,7 +39,6 @@ if [ ! -z "${1}" ] && [ "${1}" == "boot" ];then
   BOOT_ONLY=1
 fi
 
-
 LIVE=0
 if [ ! -z "${1}" ] && [ "${1}" == "live" ];then
   say "You used live option."
@@ -57,22 +56,16 @@ function setup_host {
 
 # get files needed to build image
 function get_files {
-  if [ -d "${DIR_OUT}/ark-${TARGET}" ];then
-    say "Found ArkOS boot & kernel files."
-  else
-    if [ -f "${DIR_OUT}/ark-${TARGET}.zip" ];then
-      say "Downloading ArkOS boot & kernel files."
-      wget "https://github.com/notnullgames/nullos/releases/download/rk-first/ark-${TARGET}_v2.0_09262021.zip" -O "${DIR_OUT}/ark-${TARGET}.zip"
-    fi
-    mkdir -p "${DIR_OUT}/ark-${TARGET}"
-    cd "${DIR_OUT}/ark-${TARGET}"
-    unzip "${DIR_OUT}/ark-${TARGET}.zip"
-  fi
-
   # download prebuilt mali drivers
   if [ ! -f "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip" ];then
     say "Downloading mali GPU drivers."
     wget https://dn.odroid.com/RK3326/ODROID-GO-Advance/rk3326_r13p0_gbm_with_vulkan_and_cl.zip -O "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
+  fi
+
+  # download binary kernel
+  if [ ! -f "${DIR_OUT}/linux-image-4.4.189-g3e15a35d5_4.4.189-g3e15a35d5-1_arm64.deb" ];then
+    say "Downloading kernel."
+    wget  https://github.com/notnullgames/nullos/releases/download/rk-first/linux-image-4.4.189-g3e15a35d5_4.4.189-g3e15a35d5-1_arm64.deb -O "${DIR_OUT}/linux-image-4.4.189-g3e15a35d5_4.4.189-g3e15a35d5-1_arm64.deb"
   fi
 }
 
@@ -138,8 +131,8 @@ EOF
 
 # put files on /boot
 function setup_boot {
-  say "Copying ArkOS boot files."
-  cp -R "${DIR_OUT}/ark-${TARGET}/boot/"* "${DIR_OUT}/root/boot/"
+  say "Copying boot files."
+  cp -R "${DIR_SOURCE}/boot/"* "${DIR_OUT}/root/boot/"
 
   # update UUID in /boot/boot.ini
   say "Updating boot to use UUID_ROOT=${UUID_ROOT}."
@@ -150,18 +143,16 @@ function setup_boot {
 # put files on /
 function setup_root {
   say "Building bullseye root with debootstrap"
-  debootstrap --include="curl ssh connman ofono bluez wpasupplicant udev makedev" --arch arm64 bullseye "${DIR_OUT}/root" $DEBIAN_MIRROR
+  debootstrap --include="curl ssh connman ofono bluez wpasupplicant udev makedev python-is-python3" --arch arm64 bullseye "${DIR_OUT}/root" $DEBIAN_MIRROR
 
   # extract mali drivers
+  # TODO: turn this into a deb to better track files
   cd "${DIR_OUT}"
   say "Extracting mali GPU drivers."
   unzip "${DIR_OUT}/rk3326_r13p0_gbm_with_vulkan_and_cl.zip"
   mkdir -p "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/" "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/"
   mv libmali.so_rk3326_gbm_arm64_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/aarch64-linux-gnu/libmali-bifrost-g31-rxp0-gbm.so"
   mv libmali.so_rk3326_gbm_arm32_r13p0_with_vulkan_and_cl "${DIR_OUT}/root/usr/local/lib/arm-linux-gnueabihf/libmali-bifrost-g31-rxp0-gbm.so"
-
-  say "Copying ArkOS kernel files."
-  cp -R "${DIR_OUT}/ark-${TARGET}/modules/"* "${DIR_OUT}/root/lib/modules"
 
   say "Setting up files in root."
 
@@ -183,6 +174,7 @@ UUID=${UUID_ROOT} / ext4 rw,discard,errors=remount-ro,x-systemd.growfs 0 1
 UUID=${UUID_BOOT} /boot vfat defaults 0 0
 proc             /proc         proc    defaults                 0    0
 FS
+  cp "${DIR_OUT}"/*.deb ${DIR_OUT}/root/tmp
 
   say "Setting up things in chroot."
   cat << CHROOT | chroot "${DIR_OUT}/root"
@@ -192,6 +184,9 @@ systemctl disable ssh
 printf "null0\nnull0\n" | passwd
 apt-get clean
 systemctl enable nullos-config
+apt install /tmp/*.deb
+rm -rf /tmp/*
+apt-mark hold linux-*
 CHROOT
 }
 

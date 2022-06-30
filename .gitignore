@@ -7,5 +7,6 @@
 *.qcow2
 *.raw
 *.gz
+*.deb
 
 .fuse*
